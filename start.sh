@@ -14,7 +14,7 @@ echo "⚙️ Generating Freezed and JSON serialization code..."
 dart run build_runner build --delete-conflicting-outputs
 
 echo "🔨 Building Flutter Web application..."
-flutter build web
+flutter build web --web-renderer html --no-tree-shake-icons
 
 echo "📦 Installing Node.js dependencies..."
 npm install
