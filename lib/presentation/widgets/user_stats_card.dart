@@ -37,7 +37,7 @@ class _UserStatsContent extends StatelessWidget {
         // プロフィール情報（コンパクト版）
         _CompactProfileSection(profile: userStats.profile),
         const SizedBox(height: 12),
-        
+
         // 統計情報グリッド
         _StatsGrid(userStats: userStats),
       ],
@@ -93,7 +93,7 @@ class _CompactProfileSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            
+
             // プロフィール詳細（圧縮版）
             Expanded(
               child: Column(
@@ -110,7 +110,7 @@ class _CompactProfileSection extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
+
                   // 統計情報（シンプル）
                   Text(
                     '${_formatPlayCount(profile.totalPlayCount)} plays',
@@ -160,16 +160,17 @@ class _StatsGrid extends StatelessWidget {
             color: colorScheme.primary,
             url: userStats.topArtist!.url,
           ),
-        
+
         if (userStats.topArtist != null && userStats.topTrack != null)
           const SizedBox(height: 8),
-        
+
         // トップトラック
         if (userStats.topTrack != null)
           _StatItem(
             icon: Icons.music_note,
             title: 'Top Track',
-            subtitle: '${userStats.topTrack!.name} - ${userStats.topTrack!.artist}',
+            subtitle:
+                '${userStats.topTrack!.name} - ${userStats.topTrack!.artist}',
             value: '${_formatPlayCount(userStats.topTrack!.playCount)} plays',
             color: colorScheme.secondary,
             url: userStats.topTrack!.url,
@@ -239,7 +240,7 @@ class _StatItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              
+
               // テキスト情報
               Expanded(
                 child: Column(
@@ -265,7 +266,7 @@ class _StatItem extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // 値
               Text(
                 value,
@@ -288,14 +289,21 @@ class _LoadingContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
-      height: 200,
+      height: 120,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading user statistics...'),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Loading...',
+              style: TextStyle(fontSize: 12),
+            ),
           ],
         ),
       ),
