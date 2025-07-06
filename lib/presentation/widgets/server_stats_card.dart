@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
-import 'section_title.dart';
+import 'section_card.dart';
 
 class ServerStatsCard extends ConsumerWidget {
   const ServerStatsCard({super.key});
@@ -11,25 +11,14 @@ class ServerStatsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final serverStatsAsync = ref.watch(serverStatsProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionTitle(
-              icon: Icons.analytics,
-              iconColor: const Color(AppConstants.accentColorValue),
-              title: 'Server Stats',
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            serverStatsAsync.when(
-              data: (stats) => _buildStatsContent(context, stats),
-              loading: () => _buildLoadingContent(),
-              error: (error, stack) => _buildErrorContent(error),
-            ),
-          ],
-        ),
+    return SectionCard(
+      icon: Icons.analytics,
+      iconColor: const Color(AppConstants.accentColorValue),
+      title: 'Server Stats',
+      child: serverStatsAsync.when(
+        data: (stats) => _buildStatsContent(context, stats),
+        loading: () => _buildLoadingContent(),
+        error: (error, stack) => _buildErrorContent(error),
       ),
     );
   }

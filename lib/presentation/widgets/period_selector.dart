@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import 'simple_card.dart';
 
 class PeriodSelector extends ConsumerWidget {
   const PeriodSelector({super.key});
@@ -16,40 +17,37 @@ class PeriodSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPeriod = ref.watch(selectedPeriodProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Report Period',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            Row(
-              children:
-                  periods.map((period) {
-                    final isSelected = selectedPeriod == period['key'];
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: _buildPeriodButton(
-                          context,
-                          ref,
-                          period['key'] as String,
-                          period['label'] as String,
-                          period['icon'] as IconData,
-                          isSelected,
-                        ),
+    return SimpleCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Report Period',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppConstants.defaultPadding),
+          Row(
+            children:
+                periods.map((period) {
+                  final isSelected = selectedPeriod == period['key'];
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _buildPeriodButton(
+                        context,
+                        ref,
+                        period['key'] as String,
+                        period['label'] as String,
+                        period['icon'] as IconData,
+                        isSelected,
                       ),
-                    );
-                  }).toList(),
-            ),
-          ],
-        ),
+                    ),
+                  );
+                }).toList(),
+          ),
+        ],
       ),
     );
   }

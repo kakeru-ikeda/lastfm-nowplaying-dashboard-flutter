@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/now_playing_card.dart';
-import '../widgets/music_report_card.dart';
 import '../widgets/server_stats_card.dart';
 import '../widgets/recent_tracks_card.dart';
-import '../widgets/period_selector.dart';
+import '../widgets/simple_card.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import 'music_reports_page.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -19,6 +19,17 @@ class DashboardPage extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            tooltip: 'Music Reports',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MusicReportsPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -39,6 +50,7 @@ class DashboardPage extends ConsumerWidget {
           children: [
             // Header Row
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(flex: 2, child: const NowPlayingCard()),
                 const SizedBox(width: AppConstants.defaultPadding),
@@ -49,14 +61,6 @@ class DashboardPage extends ConsumerWidget {
 
             // Recent Tracks Card
             const RecentTracksSection(),
-            const SizedBox(height: AppConstants.defaultPadding * 2),
-
-            // Period Selector
-            const PeriodSelector(),
-            const SizedBox(height: AppConstants.defaultPadding),
-
-            // Music Report
-            const MusicReportCard(),
           ],
         ),
       ),
@@ -78,35 +82,31 @@ class RecentTracksSection extends ConsumerWidget {
             onRefresh: () => ref.invalidate(autoRefreshRecentTracksProvider),
           ),
       loading:
-          () => Card(
-            child: Container(
-              height: 200,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
+          () => SimpleCard(
+            height: 200,
+            child: const Center(child: CircularProgressIndicator()),
           ),
       error:
-          (error, stackTrace) => Card(
-            child: Container(
-              height: 200,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 48),
-                    const SizedBox(height: 16),
-                    Text(
-                      '再生履歴の読み込みに失敗しました\n$error',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed:
-                          () => ref.invalidate(autoRefreshRecentTracksProvider),
-                      child: const Text('再試行'),
-                    ),
-                  ],
-                ),
+          (error, stackTrace) => SimpleCard(
+            height: 200,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    '再生履歴の読み込みに失敗しました\n$error',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed:
+                        () => ref.invalidate(autoRefreshRecentTracksProvider),
+                    child: const Text('再試行'),
+                  ),
+                ],
               ),
             ),
           ),

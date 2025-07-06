@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
-import 'section_title.dart';
+import 'section_card.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -14,25 +14,14 @@ class MusicReportCard extends ConsumerWidget {
     final selectedPeriod = ref.watch(selectedPeriodProvider);
     final reportAsync = ref.watch(musicReportProvider(selectedPeriod));
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionTitle(
-              icon: Icons.bar_chart,
-              iconColor: const Color(AppConstants.primaryColorValue),
-              title: 'Music Report',
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            reportAsync.when(
-              data: (report) => _buildReportContent(context, report),
-              loading: () => _buildLoadingContent(),
-              error: (error, stack) => _buildErrorContent(error),
-            ),
-          ],
-        ),
+    return SectionCard(
+      icon: Icons.bar_chart,
+      iconColor: const Color(AppConstants.primaryColorValue),
+      title: 'Music Report',
+      child: reportAsync.when(
+        data: (report) => _buildReportContent(context, report),
+        loading: () => _buildLoadingContent(),
+        error: (error, stack) => _buildErrorContent(error),
       ),
     );
   }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
-import 'section_title.dart';
+import 'section_card.dart';
 
 class NowPlayingCard extends ConsumerWidget {
   const NowPlayingCard({super.key});
@@ -13,27 +13,16 @@ class NowPlayingCard extends ConsumerWidget {
     final nowPlayingAsync = ref.watch(nowPlayingStreamProvider);
     final connectionState = ref.watch(webSocketConnectionStateProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionTitle(
-              icon: Icons.music_note,
-              iconColor: const Color(AppConstants.primaryColorValue),
-              title: 'Now Playing',
-              trailing: _buildConnectionIndicator(connectionState),
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            nowPlayingAsync.when(
-              data:
-                  (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
-              loading: () => _buildLoadingContent(),
-              error: (error, stack) => _buildErrorContent(error),
-            ),
-          ],
-        ),
+    return SectionCard(
+      icon: Icons.music_note,
+      iconColor: const Color(AppConstants.primaryColorValue),
+      title: 'Now Playing',
+      trailing: _buildConnectionIndicator(connectionState),
+      child: nowPlayingAsync.when(
+        data:
+            (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
+        loading: () => _buildLoadingContent(),
+        error: (error, stack) => _buildErrorContent(error),
       ),
     );
   }

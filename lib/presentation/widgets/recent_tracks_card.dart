@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../core/constants/app_constants.dart';
-import 'section_title.dart';
+import 'section_card.dart';
 
 class RecentTracksCard extends ConsumerWidget {
   final List<RecentTrackInfo> tracks;
@@ -16,56 +16,45 @@ class RecentTracksCard extends ConsumerWidget {
     // 現在再生中のトラックを履歴から除外
     final filteredTracks = tracks.where((track) => !track.isPlaying).toList();
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
-      ),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionTitle(
-              icon: Icons.history,
-              iconColor: const Color(AppConstants.primaryColorValue),
-              title: '最近の再生履歴',
-              trailing:
-                  onRefresh != null
-                      ? IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: onRefresh,
-                        tooltip: '更新',
-                      )
-                      : null,
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            if (filteredTracks.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppConstants.defaultPadding),
-                  child: Text(
-                    '再生履歴がありません',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 400),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: filteredTracks.length,
-                  separatorBuilder:
-                      (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final track = filteredTracks[index];
-                    return _RecentTrackTile(track: track);
-                  },
+    return SectionCard(
+      icon: Icons.history,
+      iconColor: const Color(AppConstants.primaryColorValue),
+      title: 'Recent Tracks',
+      trailing: onRefresh != null
+          ? IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: onRefresh,
+              tooltip: 'Refresh recent tracks',
+            )
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (filteredTracks.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppConstants.defaultPadding),
+                child: Text(
+                  '再生履歴がありません',
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
-          ],
-        ),
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: filteredTracks.length,
+                separatorBuilder:
+                    (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final track = filteredTracks[index];
+                  return _RecentTrackTile(track: track);
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
