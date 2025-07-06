@@ -15,17 +15,6 @@ class AppConstants {
   static const double cardBorderRadius = 12.0;
   static const double chartHeight = 300.0;
 
-  // Colors
-  static const int primaryColorValue = 0xFF1DB954; // Spotify Green
-  static const int secondaryColorValue = 0xFF191414; // Dark
-  static const int accentColorValue = 0xFFFF5722; // Orange
-
   // Animations
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
-  static const Duration refreshInterval = Duration(seconds: 5);
-
-  // Responsive Breakpoints
-  static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 1024;
-  static const double desktopBreakpoint = 1440;
 }

@@ -102,3 +102,32 @@ lib/
 - ローディング、エラー、空の状態に対して適切なフォールバック表示を提供する
 - マウスカーソルの変更でユーザビリティを向上させる
 - アニメーション付きインジケーターでリアルタイム状態を表現する
+
+## 設定可能な定数
+
+アプリケーション全体で使用される定数は `lib/core/constants/app_constants.dart` で管理：
+
+```dart
+class AppConstants {
+  // API Configuration
+  static const String baseUrl = 'http://localhost:3001';
+  static const String wsUrl = 'ws://localhost:3001';
+
+  // API Endpoints
+  static const String healthEndpoint = '/health';
+  static const String nowPlayingEndpoint = '/api/now-playing';
+  static const String statsEndpoint = '/api/stats';
+  static const String reportsEndpoint = '/api/reports';
+  static const String recentTracksEndpoint = '/api/recent-tracks';
+
+  // UI Constants
+  static const double defaultPadding = 16.0;
+  static const double cardBorderRadius = 12.0;
+  static const double chartHeight = 300.0;
+
+  // Animations
+  static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
+}
+```
+
+これらの定数を使用してAPIエンドポイント、UI要素のサイズ、アニメーションの設定を統一的に管理する。
