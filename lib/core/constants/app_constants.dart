@@ -1,7 +1,7 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'http://localhost:6000';
-  static const String wsUrl = 'ws://localhost:6000';
+  static const String baseUrl = 'http://localhost:3001';
+  static const String wsUrl = 'ws://localhost:3001';
 
   // API Endpoints
   static const String healthEndpoint = '/health';
