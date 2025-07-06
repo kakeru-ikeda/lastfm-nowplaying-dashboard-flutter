@@ -4,6 +4,15 @@
 
 set -e
 
+echo "🧹 Cleaning Flutter project..."
+flutter clean
+
+echo "📥 Getting Flutter dependencies..."
+flutter pub get
+
+echo "⚙️ Generating Freezed and JSON serialization code..."
+dart run build_runner build --delete-conflicting-outputs
+
 echo "🔨 Building Flutter Web application..."
 flutter build web
 
