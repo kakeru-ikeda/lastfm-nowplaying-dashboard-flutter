@@ -1,6 +1,7 @@
 import '../entities/now_playing_info.dart';
 import '../entities/music_report.dart';
 import '../entities/server_stats.dart';
+import '../entities/recent_track_info.dart';
 import '../../core/errors/failure.dart';
 
 abstract class MusicRepository {
@@ -9,6 +10,14 @@ abstract class MusicRepository {
 
   // Reports
   Future<Either<Failure, MusicReport>> getReport(String period);
+
+  // Recent Tracks
+  Future<Either<Failure, RecentTracksResponse>> getRecentTracks({
+    int? limit,
+    int? page,
+    DateTime? from,
+    DateTime? to,
+  });
 
   // Server Stats
   Future<Either<Failure, ServerStats>> getServerStats();

@@ -5,6 +5,7 @@ import '../../core/errors/exceptions.dart';
 import '../../domain/entities/now_playing_info.dart';
 import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
+import '../../domain/entities/recent_track_info.dart';
 import '../../core/utils/helpers.dart';
 
 abstract class MusicRemoteDataSource {
@@ -12,6 +13,12 @@ abstract class MusicRemoteDataSource {
   Future<MusicReport> getReport(String period);
   Future<ServerStats> getServerStats();
   Future<HealthCheckResponse> getHealthCheck();
+  Future<RecentTracksResponse> getRecentTracks({
+    int? limit,
+    int? page,
+    DateTime? from,
+    DateTime? to,
+  });
   Stream<NowPlayingInfo> getNowPlayingStream();
   void closeWebSocket();
 }
@@ -216,6 +223,74 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
       }
     } catch (e) {
       AppLogger.error('getHealthCheck error', e);
+      if (e is AppException) rethrow;
+      throw NetworkException('Network error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<RecentTracksResponse> getRecentTracks({
+    int? limit,
+    int? page,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConstants.baseUrl}${AppConstants.recentTracksEndpoint}',
+      ).replace(
+        queryParameters: {
+          'limit': limit?.toString(),
+          'page': page?.toString(),
+          if (from != null) 'from': from.toIso8601String(),
+          if (to != null) 'to': to.toIso8601String(),
+        },
+      );
+
+      final response = await httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      AppLogger.debug('Recent Tracks API Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        AppLogger.debug('Recent Tracks API Response Body: $responseBody');
+
+        if (responseBody.isEmpty) {
+          throw ServerException(
+            'Empty response body',
+            statusCode: response.statusCode,
+          );
+        }
+
+        final jsonData = JsonHelper.safeDecode(responseBody);
+        if (jsonData == null) {
+          throw ServerException(
+            'Invalid JSON response',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (jsonData['success'] == true) {
+          return RecentTracksResponse.fromJson(
+            jsonData['data'] as Map<String, dynamic>,
+          );
+        } else {
+          throw ServerException(
+            jsonData['error'] ?? 'Unknown server error',
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        throw NetworkException(
+          'Failed to fetch recent tracks',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.error('getRecentTracks error', e);
       if (e is AppException) rethrow;
       throw NetworkException('Network error: ${e.toString()}');
     }

@@ -8,6 +8,7 @@ class AppConstants {
   static const String nowPlayingEndpoint = '/api/now-playing';
   static const String statsEndpoint = '/api/stats';
   static const String reportsEndpoint = '/api/reports';
+  static const String recentTracksEndpoint = '/api/recent-tracks';
 
   // UI Constants
   static const double defaultPadding = 16.0;

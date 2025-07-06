@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import '../../domain/entities/now_playing_info.dart';
 import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
+import '../../domain/entities/recent_track_info.dart';
+import '../../domain/entities/recent_tracks_params.dart';
 import '../../domain/repositories/music_repository.dart';
 import '../../data/datasources/music_remote_data_source.dart';
 import '../../data/repositories/music_repository_impl.dart';
@@ -32,6 +34,40 @@ final nowPlayingProvider = FutureProvider<NowPlayingInfo>((ref) async {
   }, (nowPlaying) => nowPlaying);
 });
 
+// Recent Tracks Provider with parameters
+final recentTracksProvider =
+    FutureProvider.family<RecentTracksResponse, RecentTracksParams>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.watch(musicRepositoryProvider);
+      final result = await repository.getRecentTracks(
+        limit: params.limit,
+        page: params.page,
+        from: params.from,
+        to: params.to,
+      );
+
+      return result.fold((failure) {
+        AppLogger.error('Failed to get recent tracks: ${failure.message}');
+        throw Exception(failure.message);
+      }, (recentTracks) => recentTracks);
+    });
+
+// Simple recent tracks provider with default parameters
+final defaultRecentTracksProvider = FutureProvider<RecentTracksResponse>((
+  ref,
+) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final result = await repository.getRecentTracks(limit: 10);
+
+  return result.fold((failure) {
+    AppLogger.error('Failed to get recent tracks: ${failure.message}');
+    throw Exception(failure.message);
+  }, (recentTracks) => recentTracks);
+});
+
+// Music Report Provider
 final musicReportProvider = FutureProvider.family<MusicReport, String>((
   ref,
   period,
@@ -137,3 +173,33 @@ final autoRefreshProvider = Provider<bool>((ref) => true);
 
 // Selected Period Provider
 final selectedPeriodProvider = StateProvider<String>((ref) => 'daily');
+
+// Auto-refreshing Recent Tracks Provider that listens to WebSocket updates
+final autoRefreshRecentTracksProvider = StreamProvider<RecentTracksResponse>((
+  ref,
+) async* {
+  // 初期データを取得
+  final repository = ref.watch(musicRepositoryProvider);
+  final initialResult = await repository.getRecentTracks(limit: 10);
+
+  yield* initialResult.fold(
+    (failure) => Stream.error(Exception(failure.message)),
+    (recentTracks) async* {
+      yield recentTracks;
+
+      // WebSocketストリームを監視して、Now Playingが更新されたら再生履歴を再フェッチ
+      await for (final nowPlayingState in ref.watch(
+        nowPlayingWithStatusProvider.stream,
+      )) {
+        if (nowPlayingState.data != null) {
+          AppLogger.info('WebSocket updated, refreshing recent tracks');
+          final refreshResult = await repository.getRecentTracks(limit: 10);
+          yield* refreshResult.fold(
+            (failure) => Stream.error(Exception(failure.message)),
+            (refreshedTracks) => Stream.value(refreshedTracks),
+          );
+        }
+      }
+    },
+  );
+});
