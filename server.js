@@ -76,7 +76,7 @@ app.use((err, req, res, next) => {
 });
 
 // サーバー起動
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 Flutter Web Server running on http://localhost:${PORT}`);
     console.log(`📁 Serving files from: ${BUILD_PATH}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -84,12 +84,23 @@ app.listen(PORT, () => {
 });
 
 // グレースフルシャットダウン
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    process.exit(0);
-});
+const gracefulShutdown = (signal) => {
+    console.log(`${signal} received, shutting down gracefully`);
+    server.close((err) => {
+        if (err) {
+            console.error('Error during server shutdown:', err);
+            process.exit(1);
+        }
+        console.log('✅ Server closed successfully');
+        process.exit(0);
+    });
 
-process.on('SIGINT', () => {
-    console.log('SIGINT received, shutting down gracefully');
-    process.exit(0);
-});
+    // 強制終了のタイムアウト
+    setTimeout(() => {
+        console.error('❌ Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
