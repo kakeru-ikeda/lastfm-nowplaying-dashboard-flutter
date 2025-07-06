@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/helpers.dart';
 
 /// 共通のセクションカードレイアウトコンポーネント
 /// 
@@ -7,9 +8,6 @@ import '../../core/constants/app_constants.dart';
 class SectionCard extends StatelessWidget {
   /// カードのタイトルに表示するアイコン
   final IconData icon;
-  
-  /// アイコンの色
-  final Color iconColor;
   
   /// セクションのタイトル
   final String title;
@@ -32,7 +30,6 @@ class SectionCard extends StatelessWidget {
   const SectionCard({
     super.key,
     required this.icon,
-    required this.iconColor,
     required this.title,
     required this.child,
     this.trailing,
@@ -43,6 +40,18 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardColor;
+    final primaryColor = theme.colorScheme.primary;
+    final onSurfaceColor = theme.colorScheme.onSurface;
+    
+    // 背景色とのコントラストを考慮してアイコンカラーを自動選択
+    final iconColor = ColorHelper.getContrastIconColor(
+      cardColor,
+      primaryColor,
+      onSurfaceColor,
+    );
+    
     final effectivePadding = padding ?? const EdgeInsets.all(AppConstants.defaultPadding);
     final effectiveTitleSpacing = titleSpacing ?? AppConstants.defaultPadding;
     

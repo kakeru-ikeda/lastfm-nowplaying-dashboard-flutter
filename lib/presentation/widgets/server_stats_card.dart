@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
-import '../../core/constants/app_constants.dart';
 import 'section_card.dart';
 
 class ServerStatsCard extends ConsumerWidget {
@@ -13,7 +12,6 @@ class ServerStatsCard extends ConsumerWidget {
 
     return SectionCard(
       icon: Icons.analytics,
-      iconColor: const Color(AppConstants.accentColorValue),
       title: 'Server Stats',
       child: serverStatsAsync.when(
         data: (stats) => _buildStatsContent(context, stats),
@@ -24,6 +22,9 @@ class ServerStatsCard extends ConsumerWidget {
   }
 
   Widget _buildStatsContent(BuildContext context, stats) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.secondary;
+    
     return Column(
       children: [
         _buildStatItem(
@@ -31,7 +32,7 @@ class ServerStatsCard extends ConsumerWidget {
           Icons.timer,
           'Uptime',
           _formatUptime(stats.uptime),
-          Colors.blue,
+          accentColor,
         ),
         const SizedBox(height: 16),
         _buildStatItem(
@@ -39,7 +40,7 @@ class ServerStatsCard extends ConsumerWidget {
           Icons.api,
           'API Calls',
           '${stats.totalRequests}',
-          Colors.green,
+          accentColor,
         ),
         const SizedBox(height: 16),
         _buildStatItem(
@@ -47,7 +48,7 @@ class ServerStatsCard extends ConsumerWidget {
           Icons.people,
           'Connections',
           '${stats.activeConnections}',
-          Colors.orange,
+          accentColor,
         ),
         const SizedBox(height: 16),
         _buildStatItem(
@@ -77,7 +78,9 @@ class ServerStatsCard extends ConsumerWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+            ).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)
+            ),
           ),
         ),
         Text(

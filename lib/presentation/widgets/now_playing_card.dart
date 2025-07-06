@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/url_helper.dart';
 import 'section_card.dart';
 
@@ -16,7 +15,6 @@ class NowPlayingCard extends ConsumerWidget {
 
     return SectionCard(
       icon: Icons.music_note,
-      iconColor: const Color(AppConstants.primaryColorValue),
       title: 'Now Playing',
       trailing: _buildConnectionIndicator(connectionState),
       child: nowPlayingAsync.when(
@@ -66,20 +64,20 @@ class NowPlayingCard extends ConsumerWidget {
                               (context, url) =>
                                   const Center(child: CircularProgressIndicator()),
                           errorWidget:
-                              (context, url, error) => const Icon(
+                              (context, url, error) => Icon(
                                 Icons.music_note,
-                                color: Colors.white54,
+                                color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
                                 size: 60,
                               ),
                         ),
                       )
-                      : const Icon(
+                      : Icon(
                         Icons.music_note,
-                        color: Colors.white54,
+                        color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
                         size: 60,
                       ),
             ),
-            const SizedBox(width: AppConstants.defaultPadding),
+            const SizedBox(width: 16),
 
             // Track Info
             Expanded(
@@ -99,7 +97,9 @@ class NowPlayingCard extends ConsumerWidget {
                     nowPlaying.artist ?? 'Unknown Artist',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                    ).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -109,7 +109,9 @@ class NowPlayingCard extends ConsumerWidget {
                       nowPlaying.album!,
                       style: Theme.of(
                         context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+                      ).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6)
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -122,7 +124,7 @@ class NowPlayingCard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(AppConstants.primaryColorValue),
+                color: Theme.of(context).colorScheme.secondary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -130,16 +132,24 @@ class NowPlayingCard extends ConsumerWidget {
                 children: [
                   _buildPlayingAnimation(),
                   const SizedBox(width: 4),
-                  const Text(
+                  Text(
                     'LIVE',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
+                          ? Colors.black 
+                          : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.stream, color: Colors.white, size: 12),
+                  Icon(
+                    Icons.stream, 
+                    color: Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
+                        ? Colors.black 
+                        : Colors.white, 
+                    size: 12
+                  ),
                 ],
               ),
             ),
@@ -157,13 +167,15 @@ class NowPlayingCard extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.music_off, size: 48, color: Colors.white38),
+            Icon(Icons.music_off, size: 48, color: Theme.of(context).iconTheme.color?.withOpacity(0.4)),
             const SizedBox(height: 8),
             Text(
               'Nothing is playing',
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
+              ).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.6)
+              ),
             ),
           ],
         ),
@@ -220,32 +232,40 @@ class NowPlayingCard extends ConsumerWidget {
   }
 
   Widget _buildPlayingAnimation() {
-    return SizedBox(
-      width: 16,
-      height: 16,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(3, (index) {
-          return TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 600 + (index * 100)),
-            tween: Tween(begin: 4.0, end: 16.0),
-            builder: (context, value, child) {
-              return AnimatedContainer(
-                duration: Duration(milliseconds: 300 + (index * 50)),
-                width: 3,
-                height: value,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(1.5),
-                ),
+    return Builder(
+      builder: (context) {
+        final animationColor = Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
+            ? Colors.black 
+            : Colors.white;
+            
+        return SizedBox(
+          width: 16,
+          height: 16,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(3, (index) {
+              return TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 600 + (index * 100)),
+                tween: Tween(begin: 4.0, end: 16.0),
+                builder: (context, value, child) {
+                  return AnimatedContainer(
+                    duration: Duration(milliseconds: 300 + (index * 50)),
+                    width: 3,
+                    height: value,
+                    decoration: BoxDecoration(
+                      color: animationColor,
+                      borderRadius: BorderRadius.circular(1.5),
+                    ),
+                  );
+                },
+                onEnd: () {
+                  // アニメーションを繰り返すためのトリガー
+                },
               );
-            },
-            onEnd: () {
-              // アニメーションを繰り返すためのトリガー
-            },
-          );
-        }),
-      ),
+            }),
+          ),
+        );
+      },
     );
   }
 

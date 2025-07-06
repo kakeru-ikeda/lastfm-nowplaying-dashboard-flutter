@@ -66,20 +66,26 @@ class PeriodSelector extends ConsumerWidget {
         onPressed: () {
           ref.read(selectedPeriodProvider.notifier).state = key;
         },
-        icon: Icon(icon, color: isSelected ? Colors.white : Colors.white70),
+        icon: Icon(
+          icon, 
+          color: isSelected 
+            ? (Theme.of(context).colorScheme.primary.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+            : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)
+        ),
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
+            color: isSelected 
+              ? (Theme.of(context).colorScheme.primary.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+              : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor:
               isSelected
-                  ? const Color(AppConstants.primaryColorValue)
-                  : Colors.white12,
-          foregroundColor: Colors.white,
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.1),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: isSelected ? 4 : 0,

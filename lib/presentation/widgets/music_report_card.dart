@@ -17,7 +17,6 @@ class MusicReportCard extends ConsumerWidget {
 
     return SectionCard(
       icon: Icons.bar_chart,
-      iconColor: const Color(AppConstants.primaryColorValue),
       title: 'Music Report',
       child: reportAsync.when(
         data: (report) => _buildReportContent(context, report),
@@ -71,7 +70,7 @@ class MusicReportCard extends ConsumerWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 1,
                   getDrawingHorizontalLine:
-                      (value) => FlLine(color: Colors.white12, strokeWidth: 1),
+                      (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
                   show: true,
@@ -95,8 +94,8 @@ class MusicReportCard extends ConsumerWidget {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '${date.month}/${date.day}',
-                              style: const TextStyle(
-                                color: Colors.white70,
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                                 fontSize: 12,
                               ),
                             ),
@@ -115,8 +114,8 @@ class MusicReportCard extends ConsumerWidget {
                           padding: const EdgeInsets.only(right: 4),
                           child: Text(
                             value.toInt().toString(),
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                               fontSize: 12,
                             ),
                           ),
@@ -127,9 +126,9 @@ class MusicReportCard extends ConsumerWidget {
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: const Border(
-                    bottom: BorderSide(color: Colors.white24),
-                    left: BorderSide(color: Colors.white24),
+                  border: Border(
+                    bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                    left: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                   ),
                 ),
                 minX: 0,
@@ -150,15 +149,13 @@ class MusicReportCard extends ConsumerWidget {
                           );
                         }).toList(),
                     isCurved: true,
-                    color: const Color(AppConstants.primaryColorValue),
+                    color: Theme.of(context).colorScheme.secondary,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(show: true),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: const Color(
-                        AppConstants.primaryColorValue,
-                      ).withOpacity(0.2),
+                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
                     ),
                   ),
                 ],
@@ -219,7 +216,7 @@ class MusicReportCard extends ConsumerWidget {
         trailing: Text(
           '${track.playcount}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: const Color(AppConstants.primaryColorValue),
+            color: Theme.of(context).colorScheme.secondary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -239,7 +236,7 @@ class MusicReportCard extends ConsumerWidget {
         trailing: Text(
           '${artist.playcount}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: const Color(AppConstants.primaryColorValue),
+            color: Theme.of(context).colorScheme.secondary,
             fontWeight: FontWeight.bold,
           ),
         ),

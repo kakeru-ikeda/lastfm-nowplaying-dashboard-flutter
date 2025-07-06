@@ -7,6 +7,7 @@ import '../widgets/simple_card.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import 'music_reports_page.dart';
+import 'settings_page.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -19,6 +20,17 @@ class DashboardPage extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.bar_chart),
             tooltip: 'Music Reports',

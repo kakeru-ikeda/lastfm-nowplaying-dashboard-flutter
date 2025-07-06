@@ -19,11 +19,10 @@ class RecentTracksCard extends ConsumerWidget {
 
     return SectionCard(
       icon: Icons.history,
-      iconColor: const Color(AppConstants.primaryColorValue),
       title: 'Recent Tracks',
       trailing: onRefresh != null
           ? IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.secondary),
               onPressed: onRefresh,
               tooltip: 'Refresh recent tracks',
             )

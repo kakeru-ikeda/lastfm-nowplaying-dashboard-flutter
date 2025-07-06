@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 
 class AppLogger {
@@ -87,5 +88,68 @@ class JsonHelper {
     if (value is bool) return value;
     if (value is String) return value.toLowerCase() == 'true';
     return null;
+  }
+}
+
+class ColorHelper {
+  /// 背景色とのコントラストを考慮して最適なアイコンカラーを返す
+  ///
+  /// [backgroundColor] - 背景色
+  /// [primaryColor] - テーマのプライマリカラー
+  /// [onSurfaceColor] - テーマのonSurfaceカラー（通常のテキスト色）
+  ///
+  /// 返り値：背景色とのコントラストが十分な場合はprimaryColor、
+  /// そうでない場合は明度に応じて白または黒を返す
+  static Color getContrastIconColor(
+    Color backgroundColor,
+    Color primaryColor,
+    Color onSurfaceColor,
+  ) {
+    // プライマリカラーと背景色のコントラストをチェック
+    final primaryContrast = _calculateContrast(backgroundColor, primaryColor);
+
+    // コントラスト比が3.0以上なら十分読みやすい
+    if (primaryContrast >= 3.0) {
+      return primaryColor;
+    }
+
+    // プライマリカラーのコントラストが不十分な場合、
+    // onSurfaceColorを使用（これは通常、テーマに適した色）
+    return onSurfaceColor;
+  }
+
+  /// 2つの色のコントラスト比を計算
+  static double _calculateContrast(Color color1, Color color2) {
+    final luminance1 = _getLuminance(color1);
+    final luminance2 = _getLuminance(color2);
+
+    final lighter = luminance1 > luminance2 ? luminance1 : luminance2;
+    final darker = luminance1 > luminance2 ? luminance2 : luminance1;
+
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  /// 色の相対輝度を計算
+  static double _getLuminance(Color color) {
+    final r = _linearizeColorComponent(color.red / 255.0);
+    final g = _linearizeColorComponent(color.green / 255.0);
+    final b = _linearizeColorComponent(color.blue / 255.0);
+
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  /// 色成分を線形化
+  static double _linearizeColorComponent(double component) {
+    if (component <= 0.03928) {
+      return component / 12.92;
+    } else {
+      return ((component + 0.055) / 1.055) * ((component + 0.055) / 1.055);
+    }
+  }
+
+  /// 背景色の明度を判定してテキストカラーを決定
+  static Color getContrastTextColor(Color backgroundColor) {
+    final luminance = _getLuminance(backgroundColor);
+    return luminance > 0.5 ? Colors.black87 : Colors.white;
   }
 }

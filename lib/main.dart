@@ -1,53 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'presentation/pages/dashboard_page.dart';
-import 'core/constants/app_constants.dart';
+import 'presentation/providers/theme_providers.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final sharedPreferences = await SharedPreferences.getInstance();
+  
+  runApp(ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    ],
+    child: const MyApp(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeData = ref.watch(themeDataProvider);
+    final themeSettings = ref.watch(themeSettingsNotifierProvider);
+
     return MaterialApp(
       title: 'Last.fm Now Playing Dashboard',
-      theme: ThemeData(
-        primarySwatch:
-            MaterialColor(AppConstants.primaryColorValue, <int, Color>{
-              50: const Color(AppConstants.primaryColorValue).withOpacity(0.1),
-              100: const Color(AppConstants.primaryColorValue).withOpacity(0.2),
-              200: const Color(AppConstants.primaryColorValue).withOpacity(0.3),
-              300: const Color(AppConstants.primaryColorValue).withOpacity(0.4),
-              400: const Color(AppConstants.primaryColorValue).withOpacity(0.5),
-              500: const Color(AppConstants.primaryColorValue),
-              600: const Color(AppConstants.primaryColorValue).withOpacity(0.7),
-              700: const Color(AppConstants.primaryColorValue).withOpacity(0.8),
-              800: const Color(AppConstants.primaryColorValue).withOpacity(0.9),
-              900: const Color(AppConstants.primaryColorValue),
-            }),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(AppConstants.primaryColorValue),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansTextTheme().apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
-        scaffoldBackgroundColor: const Color(AppConstants.secondaryColorValue),
-        cardTheme: CardTheme(
-          color: const Color(AppConstants.secondaryColorValue).withOpacity(0.8),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
-          ),
-        ),
-      ),
+      theme: themeData,
+      themeMode: themeSettings.themeMode,
       builder:
           (context, child) => ResponsiveBreakpoints.builder(
             child: child!,
