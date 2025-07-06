@@ -2,6 +2,7 @@ import '../../domain/entities/now_playing_info.dart';
 import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
+import '../../domain/entities/user_stats.dart';
 import '../../domain/repositories/music_repository.dart';
 import '../../core/errors/failure.dart';
 import '../../core/errors/exceptions.dart';
@@ -129,6 +130,25 @@ class MusicRepositoryImpl implements MusicRepository {
       return Left(Failure.server(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       AppLogger.error('Unknown error in getRecentTracks', e);
+      return Left(Failure.unknown(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserStats>> getUserStats() async {
+    try {
+      final result = await remoteDataSource.getUserStats();
+      return Right(result);
+    } on NetworkException catch (e) {
+      AppLogger.error('Network error in getUserStats', e);
+      return Left(
+        Failure.network(message: e.message, statusCode: e.statusCode),
+      );
+    } on ServerException catch (e) {
+      AppLogger.error('Server error in getUserStats', e);
+      return Left(Failure.server(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      AppLogger.error('Unknown error in getUserStats', e);
       return Left(Failure.unknown(message: e.toString()));
     }
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/now_playing_card.dart';
-import '../widgets/server_stats_card.dart';
 import '../widgets/recent_tracks_card.dart';
+import '../widgets/user_stats_card.dart';
 import '../widgets/simple_card.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
@@ -55,7 +55,7 @@ class DashboardPage extends ConsumerWidget {
               // WebSocketストリームは自動的に更新されるが、
               // 他のプロバイダーはリフレッシュする
               ref.invalidate(autoRefreshRecentTracksProvider);
-              ref.invalidate(serverStatsProvider);
+              ref.invalidate(autoRefreshUserStatsProvider);
               // nowPlayingStreamProviderは自動更新なのでinvalidateは不要
             },
           ),
@@ -69,13 +69,13 @@ class DashboardPage extends ConsumerWidget {
           children: [
             // Header Row
             SizedBox(
-              height: 220, // 固定の高さを設定
+              height: 210, // +10px でNowPlayingとUser Statsカードの高さを調整
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 2, child: const NowPlayingCard()),
                   const SizedBox(width: AppConstants.defaultPadding),
-                  Expanded(flex: 1, child: const ServerStatsCard()),
+                  Expanded(flex: 1, child: const UserStatsCard()),
                 ],
               ),
             ),

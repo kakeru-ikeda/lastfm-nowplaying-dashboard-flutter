@@ -2,6 +2,7 @@ import '../entities/now_playing_info.dart';
 import '../entities/music_report.dart';
 import '../entities/server_stats.dart';
 import '../entities/recent_track_info.dart';
+import '../entities/user_stats.dart';
 import '../../core/errors/failure.dart';
 
 abstract class MusicRepository {
@@ -21,6 +22,9 @@ abstract class MusicRepository {
 
   // Server Stats
   Future<Either<Failure, ServerStats>> getServerStats();
+
+  // User Stats
+  Future<Either<Failure, UserStats>> getUserStats();
 
   // Health Check
   Future<Either<Failure, HealthCheckResponse>> getHealthCheck();

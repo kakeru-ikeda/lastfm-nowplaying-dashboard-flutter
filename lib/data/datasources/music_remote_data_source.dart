@@ -6,12 +6,14 @@ import '../../domain/entities/now_playing_info.dart';
 import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
+import '../../domain/entities/user_stats.dart';
 import '../../core/utils/helpers.dart';
 
 abstract class MusicRemoteDataSource {
   Future<NowPlayingInfo> getNowPlaying();
   Future<MusicReport> getReport(String period);
   Future<ServerStats> getServerStats();
+  Future<UserStats> getUserStats();
   Future<HealthCheckResponse> getHealthCheck();
   Future<RecentTracksResponse> getRecentTracks({
     int? limit,
@@ -180,6 +182,60 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
       }
     } catch (e) {
       AppLogger.error('getServerStats error', e);
+      if (e is AppException) rethrow;
+      throw NetworkException('Network error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserStats> getUserStats() async {
+    try {
+      final response = await httpClient.get(
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.userStatsEndpoint}'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      AppLogger.debug('User Stats API Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        AppLogger.debug('User Stats API Response Body: $responseBody');
+
+        if (responseBody.isEmpty) {
+          throw ServerException(
+            'Empty response body',
+            statusCode: response.statusCode,
+          );
+        }
+
+        final jsonData = JsonHelper.safeDecode(responseBody);
+        if (jsonData == null) {
+          throw ServerException(
+            'Invalid JSON response',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (jsonData['success'] == true) {
+          // APIレスポンスの詳細なログ出力
+          AppLogger.debug('User Stats Data Structure: ${jsonData['data']}');
+          AppLogger.debug('Profile Data: ${jsonData['data']['profile']}');
+          
+          return UserStats.fromJson(jsonData['data'] as Map<String, dynamic>);
+        } else {
+          throw ServerException(
+            jsonData['error'] ?? 'Unknown server error',
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        throw NetworkException(
+          'Failed to fetch user stats',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.error('getUserStats error', e);
       if (e is AppException) rethrow;
       throw NetworkException('Network error: ${e.toString()}');
     }

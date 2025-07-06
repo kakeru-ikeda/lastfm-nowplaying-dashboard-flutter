@@ -7,6 +7,7 @@ class AppConstants {
   static const String healthEndpoint = '/health';
   static const String nowPlayingEndpoint = '/api/now-playing';
   static const String statsEndpoint = '/api/stats';
+  static const String userStatsEndpoint = '/api/user-stats';
   static const String reportsEndpoint = '/api/reports';
   static const String recentTracksEndpoint = '/api/recent-tracks';
 

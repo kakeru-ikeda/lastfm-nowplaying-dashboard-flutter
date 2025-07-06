@@ -6,11 +6,11 @@ import '../../core/utils/helpers.dart';
 /// 
 /// 一貫したパディング、カードスタイル、タイトル表示を提供します
 class SectionCard extends StatelessWidget {
-  /// カードのタイトルに表示するアイコン
-  final IconData icon;
+  /// カードのタイトルに表示するアイコン（オプション）
+  final IconData? icon;
   
-  /// セクションのタイトル
-  final String title;
+  /// セクションのタイトル（オプション）
+  final String? title;
   
   /// タイトル行の右側に表示するウィジェット（オプション）
   final Widget? trailing;
@@ -29,8 +29,8 @@ class SectionCard extends StatelessWidget {
   
   const SectionCard({
     super.key,
-    required this.icon,
-    required this.title,
+    this.icon,
+    this.title,
     required this.child,
     this.trailing,
     this.height,
@@ -45,40 +45,48 @@ class SectionCard extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
     final onSurfaceColor = theme.colorScheme.onSurface;
     
-    // 背景色とのコントラストを考慮してアイコンカラーを自動選択
-    final iconColor = ColorHelper.getContrastIconColor(
-      cardColor,
-      primaryColor,
-      onSurfaceColor,
-    );
-    
     final effectivePadding = padding ?? const EdgeInsets.all(AppConstants.defaultPadding);
     final effectiveTitleSpacing = titleSpacing ?? AppConstants.defaultPadding;
+    
+    // タイトル行を表示するかどうかを判定
+    final showTitle = title != null && title!.isNotEmpty;
     
     Widget cardContent = Padding(
       padding: effectivePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // タイトル行
-          Row(
-            children: [
-              Icon(icon, color: iconColor, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              if (trailing != null) ...[
-                const Spacer(),
-                trailing!,
+          // タイトル行（タイトルがある場合のみ表示）
+          if (showTitle) ...[
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon!,
+                    color: ColorHelper.getContrastIconColor(
+                      cardColor,
+                      primaryColor,
+                      onSurfaceColor,
+                    ),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  title!,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (trailing != null) ...[
+                  const Spacer(),
+                  trailing!,
+                ],
               ],
-            ],
-          ),
-          SizedBox(height: effectiveTitleSpacing),
+            ),
+            SizedBox(height: effectiveTitleSpacing),
+          ],
           // コンテンツ
           child,
         ],
