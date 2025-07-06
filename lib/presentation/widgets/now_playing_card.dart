@@ -9,7 +9,8 @@ class NowPlayingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final nowPlayingAsync = ref.watch(nowPlayingProvider);
+    final nowPlayingAsync = ref.watch(nowPlayingStreamProvider);
+    final connectionState = ref.watch(webSocketConnectionStateProvider);
 
     return Card(
       child: Padding(
@@ -31,6 +32,8 @@ class NowPlayingCard extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const Spacer(),
+                _buildConnectionIndicator(connectionState),
               ],
             ),
             const SizedBox(height: AppConstants.defaultPadding),
@@ -144,6 +147,8 @@ class NowPlayingCard extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(width: 4),
+              const Icon(Icons.stream, color: Colors.white, size: 12),
             ],
           ),
         ),
@@ -192,9 +197,24 @@ class NowPlayingCard extends ConsumerWidget {
         children: [
           const Icon(Icons.error_outline, size: 48, color: Colors.red),
           const SizedBox(height: 8),
+          const Text(
+            'Connection Error',
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'WebSocketの接続に失敗しました。\nサーバーが起動しているか確認してください。',
+            style: TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
           Text(
             'Error: ${error.toString()}',
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(color: Colors.red.withOpacity(0.7), fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],
@@ -209,16 +229,67 @@ class NowPlayingCard extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(3, (index) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            width: 3,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(1.5),
-            ),
+          return TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 600 + (index * 100)),
+            tween: Tween(begin: 4.0, end: 16.0),
+            builder: (context, value, child) {
+              return AnimatedContainer(
+                duration: Duration(milliseconds: 300 + (index * 50)),
+                width: 3,
+                height: value,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              );
+            },
+            onEnd: () {
+              // アニメーションを繰り返すためのトリガー
+            },
           );
         }),
+      ),
+    );
+  }
+
+  Widget _buildConnectionIndicator(String connectionState) {
+    Color indicatorColor;
+    IconData indicatorIcon;
+    String tooltip;
+
+    switch (connectionState) {
+      case 'connected':
+        indicatorColor = Colors.green;
+        indicatorIcon = Icons.wifi;
+        tooltip = 'WebSocket接続中';
+        break;
+      case 'connecting':
+        indicatorColor = Colors.orange;
+        indicatorIcon = Icons.wifi_tethering;
+        tooltip = '接続中...';
+        break;
+      case 'error':
+        indicatorColor = Colors.red;
+        indicatorIcon = Icons.wifi_off;
+        tooltip = '接続エラー';
+        break;
+      default:
+        indicatorColor = Colors.grey;
+        indicatorIcon = Icons.wifi_off;
+        tooltip = '未接続';
+        break;
+    }
+
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: indicatorColor.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: indicatorColor, width: 1),
+        ),
+        child: Icon(indicatorIcon, size: 16, color: indicatorColor),
       ),
     );
   }

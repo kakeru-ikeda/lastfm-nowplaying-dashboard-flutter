@@ -19,6 +19,8 @@ abstract class MusicRemoteDataSource {
 class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   final http.Client httpClient;
   WebSocketChannel? _webSocketChannel;
+  int _reconnectAttempts = 0;
+  static const int maxReconnectAttempts = 5;
 
   MusicRemoteDataSourceImpl({required this.httpClient});
 
@@ -221,38 +223,67 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
 
   @override
   Stream<NowPlayingInfo> getNowPlayingStream() {
-    try {
-      _webSocketChannel = WebSocketChannel.connect(
-        Uri.parse(AppConstants.wsUrl),
-      );
+    return _createWebSocketStream();
+  }
 
-      AppLogger.info('WebSocket connected: ${AppConstants.wsUrl}');
+  Stream<NowPlayingInfo> _createWebSocketStream() async* {
+    while (_reconnectAttempts < maxReconnectAttempts) {
+      try {
+        _webSocketChannel = WebSocketChannel.connect(
+          Uri.parse(AppConstants.wsUrl),
+        );
 
-      return _webSocketChannel!.stream.map((data) {
-        try {
-          if (data == null || data.toString().isEmpty) {
-            throw WebSocketException('Empty WebSocket message');
+        AppLogger.info(
+          'WebSocket connected: ${AppConstants.wsUrl} (attempt ${_reconnectAttempts + 1})',
+        );
+        _reconnectAttempts = 0; // 接続成功時にリセット
+
+        await for (final data in _webSocketChannel!.stream) {
+          if (data != null && data.toString().isNotEmpty) {
+            try {
+              final jsonData = JsonHelper.safeDecode(data.toString());
+              if (jsonData == null) {
+                AppLogger.warning('Invalid JSON in WebSocket message');
+                continue;
+              }
+
+              // now-playingメッセージのみを処理し、他は無視
+              if (jsonData['type'] == 'now-playing') {
+                yield NowPlayingInfo.fromJson(
+                  jsonData['data'] as Map<String, dynamic>,
+                );
+              } else {
+                // connection-statusやその他のメッセージタイプは無視
+                AppLogger.debug(
+                  'Ignoring WebSocket message type: ${jsonData['type']}',
+                );
+              }
+            } catch (e) {
+              AppLogger.error('WebSocket message parse error', e);
+              // パースエラーは継続
+            }
           }
-
-          final jsonData = JsonHelper.safeDecode(data.toString());
-          if (jsonData == null) {
-            throw WebSocketException('Invalid JSON in WebSocket message');
-          }
-
-          if (jsonData['type'] == 'now-playing') {
-            return NowPlayingInfo.fromJson(
-              jsonData['data'] as Map<String, dynamic>,
-            );
-          }
-          throw WebSocketException('Invalid message type: ${jsonData['type']}');
-        } catch (e) {
-          AppLogger.error('WebSocket message parse error', e);
-          throw WebSocketException('Failed to parse WebSocket message: $e');
         }
-      }).cast<NowPlayingInfo>();
-    } catch (e) {
-      AppLogger.error('WebSocket connection error', e);
-      throw WebSocketException('Failed to connect to WebSocket: $e');
+      } catch (e) {
+        AppLogger.error(
+          'WebSocket connection error (attempt ${_reconnectAttempts + 1})',
+          e,
+        );
+        closeWebSocket();
+
+        _reconnectAttempts++;
+        if (_reconnectAttempts < maxReconnectAttempts) {
+          AppLogger.info(
+            'Reconnecting in ${_reconnectAttempts * 2} seconds...',
+          );
+          await Future.delayed(Duration(seconds: _reconnectAttempts * 2));
+        } else {
+          AppLogger.error('Max reconnection attempts reached');
+          throw WebSocketException(
+            'Failed to connect to WebSocket after $maxReconnectAttempts attempts',
+          );
+        }
+      }
     }
   }
 
@@ -260,6 +291,7 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   void closeWebSocket() {
     _webSocketChannel?.sink.close();
     _webSocketChannel = null;
+    _reconnectAttempts = 0; // 手動切断時にリセット
     AppLogger.info('WebSocket connection closed');
   }
 }

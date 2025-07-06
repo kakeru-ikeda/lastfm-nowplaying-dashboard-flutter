@@ -65,8 +65,35 @@ final healthCheckProvider = FutureProvider<HealthCheckResponse>((ref) async {
   }, (health) => health);
 });
 
-// WebSocket Stream Provider
-final nowPlayingStreamProvider = StreamProvider<NowPlayingInfo>((ref) {
+// 接続状態とデータを含む統合モデル
+class NowPlayingState {
+  final NowPlayingInfo? data;
+  final String connectionStatus;
+  final String? error;
+
+  const NowPlayingState({
+    this.data,
+    required this.connectionStatus,
+    this.error,
+  });
+
+  NowPlayingState copyWith({
+    NowPlayingInfo? data,
+    String? connectionStatus,
+    String? error,
+  }) {
+    return NowPlayingState(
+      data: data ?? this.data,
+      connectionStatus: connectionStatus ?? this.connectionStatus,
+      error: error ?? this.error,
+    );
+  }
+}
+
+// 統合されたNow Playing Stream Provider
+final nowPlayingWithStatusProvider = StreamProvider<NowPlayingState>((
+  ref,
+) async* {
   final repository = ref.watch(musicRepositoryProvider);
 
   ref.onDispose(() {
@@ -74,7 +101,35 @@ final nowPlayingStreamProvider = StreamProvider<NowPlayingInfo>((ref) {
     repository.closeWebSocket();
   });
 
-  return repository.getNowPlayingStream();
+  // 初期状態
+  yield const NowPlayingState(connectionStatus: 'connecting');
+
+  try {
+    await for (final nowPlaying in repository.getNowPlayingStream()) {
+      yield NowPlayingState(data: nowPlaying, connectionStatus: 'connected');
+    }
+  } catch (error) {
+    AppLogger.error('WebSocket stream error: $error');
+    yield NowPlayingState(connectionStatus: 'error', error: error.toString());
+  }
+});
+
+// 後方互換性のためのプロバイダー
+final nowPlayingStreamProvider = StreamProvider<NowPlayingInfo>((ref) {
+  return ref
+      .watch(nowPlayingWithStatusProvider.stream)
+      .where((state) => state.data != null)
+      .map((state) => state.data!);
+});
+
+// WebSocket Connection State Provider（後方互換性のため）
+final webSocketConnectionStateProvider = Provider<String>((ref) {
+  final state = ref.watch(nowPlayingWithStatusProvider);
+  return state.when(
+    data: (data) => data.connectionStatus,
+    loading: () => 'connecting',
+    error: (error, stack) => 'error',
+  );
 });
 
 // Auto-refresh Provider

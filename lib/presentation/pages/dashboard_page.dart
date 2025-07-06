@@ -23,9 +23,11 @@ class DashboardPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ref.invalidate(nowPlayingProvider);
+              // WebSocketストリームは自動的に更新されるが、
+              // 他のプロバイダーはリフレッシュする
               ref.invalidate(musicReportProvider(selectedPeriod));
               ref.invalidate(serverStatsProvider);
+              // nowPlayingStreamProviderは自動更新なのでinvalidateは不要
             },
           ),
           const SizedBox(width: AppConstants.defaultPadding),
