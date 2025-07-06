@@ -127,34 +127,31 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.grey[800],
               ),
-              child:
-                  nowPlaying.imageUrl != null
-                      ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(
-                          imageUrl: nowPlaying.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder:
-                              (context, url) => const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                          errorWidget:
-                              (context, url, error) => Icon(
-                                Icons.music_note,
-                                color: Theme.of(
-                                  context,
-                                ).iconTheme.color?.withOpacity(0.6),
-                                size: 60,
-                              ),
+              child: nowPlaying.imageUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: nowPlaying.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(),
                         ),
-                      )
-                      : Icon(
-                        Icons.music_note,
-                        color: Theme.of(
-                          context,
-                        ).iconTheme.color?.withOpacity(0.6),
-                        size: 60,
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.music_note,
+                          color: Theme.of(
+                            context,
+                          ).iconTheme.color?.withOpacity(0.6),
+                          size: 60,
+                        ),
                       ),
+                    )
+                  : Icon(
+                      Icons.music_note,
+                      color: Theme.of(
+                        context,
+                      ).iconTheme.color?.withOpacity(0.6),
+                      size: 60,
+                    ),
             ),
             const SizedBox(width: 16),
 
@@ -165,20 +162,20 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                 children: [
                   Text(
                     nowPlaying.track ?? 'Unknown Track',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     nowPlaying.artist ?? 'Unknown Artist',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -187,11 +184,11 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                     const SizedBox(height: 4),
                     Text(
                       nowPlaying.album!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.color?.withOpacity(0.6),
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -225,10 +222,10 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
             Text(
               'Nothing is playing',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.color?.withOpacity(0.6),
-              ),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.color?.withOpacity(0.6),
+                  ),
             ),
           ],
         ),
