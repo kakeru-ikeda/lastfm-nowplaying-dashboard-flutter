@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -5,11 +6,85 @@ import '../providers/music_providers.dart';
 import '../../core/utils/url_helper.dart';
 import 'section_card.dart';
 
-class NowPlayingCard extends ConsumerWidget {
+class NowPlayingCard extends ConsumerStatefulWidget {
   const NowPlayingCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NowPlayingCard> createState() => _NowPlayingCardState();
+}
+
+class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
+    with TickerProviderStateMixin {
+  late AnimationController _liveAnimationController;
+  late AnimationController _pulseAnimationController;
+  late AnimationController _waveAnimationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+  late Animation<double> _waveAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // LIVEインジケーターのスケールアニメーション
+    _liveAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    // パルス（点滅）アニメーション
+    _pulseAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    // 音波アニメーション
+    _waveAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _liveAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _pulseAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _waveAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // アニメーションを開始
+    _startAnimations();
+  }
+
+  void _startAnimations() {
+    _liveAnimationController.repeat(reverse: true);
+    _pulseAnimationController.repeat(reverse: true);
+    _waveAnimationController.repeat();
+  }
+
+  @override
+  void dispose() {
+    _liveAnimationController.dispose();
+    _pulseAnimationController.dispose();
+    _waveAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final nowPlayingAsync = ref.watch(nowPlayingStreamProvider);
     final connectionState = ref.watch(webSocketConnectionStateProvider);
 
@@ -18,8 +93,7 @@ class NowPlayingCard extends ConsumerWidget {
       title: 'Now Playing',
       trailing: _buildConnectionIndicator(connectionState),
       child: nowPlayingAsync.when(
-        data:
-            (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
+        data: (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
         loading: () => _buildLoadingContent(),
         error: (error, stack) => _buildErrorContent(error),
       ),
@@ -37,8 +111,8 @@ class NowPlayingCard extends ConsumerWidget {
         onTap: () {
           if (nowPlaying.artist != null && nowPlaying.track != null) {
             final url = UrlHelper.generateLastfmTrackUrl(
-              nowPlaying.artist!, 
-              nowPlaying.track!
+              nowPlaying.artist!,
+              nowPlaying.track!,
             );
             UrlHelper.openInNewTab(url);
           }
@@ -61,19 +135,24 @@ class NowPlayingCard extends ConsumerWidget {
                           imageUrl: nowPlaying.imageUrl!,
                           fit: BoxFit.cover,
                           placeholder:
-                              (context, url) =>
-                                  const Center(child: CircularProgressIndicator()),
+                              (context, url) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                           errorWidget:
                               (context, url, error) => Icon(
                                 Icons.music_note,
-                                color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                                color: Theme.of(
+                                  context,
+                                ).iconTheme.color?.withOpacity(0.6),
                                 size: 60,
                               ),
                         ),
                       )
                       : Icon(
                         Icons.music_note,
-                        color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).iconTheme.color?.withOpacity(0.6),
                         size: 60,
                       ),
             ),
@@ -86,31 +165,32 @@ class NowPlayingCard extends ConsumerWidget {
                 children: [
                   Text(
                     nowPlaying.track ?? 'Unknown Track',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     nowPlaying.artist ?? 'Unknown Artist',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (nowPlaying.album != null && nowPlaying.album!.isNotEmpty) ...[
+                  if (nowPlaying.album != null &&
+                      nowPlaying.album!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       nowPlaying.album!,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6)
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.color?.withOpacity(0.6),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -120,39 +200,8 @@ class NowPlayingCard extends ConsumerWidget {
               ),
             ),
 
-            // Playing Indicator
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPlayingAnimation(),
-                  const SizedBox(width: 4),
-                  Text(
-                    'LIVE',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
-                          ? Colors.black 
-                          : Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.stream, 
-                    color: Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
-                        ? Colors.black 
-                        : Colors.white, 
-                    size: 12
-                  ),
-                ],
-              ),
-            ),
+            // Playing Indicator with Animation
+            _buildAnimatedLiveIndicator(context),
           ],
         ),
       ),
@@ -167,14 +216,18 @@ class NowPlayingCard extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.music_off, size: 48, color: Theme.of(context).iconTheme.color?.withOpacity(0.4)),
+            Icon(
+              Icons.music_off,
+              size: 48,
+              color: Theme.of(context).iconTheme.color?.withOpacity(0.4),
+            ),
             const SizedBox(height: 8),
             Text(
               'Nothing is playing',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.6)
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.color?.withOpacity(0.6),
               ),
             ),
           ],
@@ -231,44 +284,6 @@ class NowPlayingCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlayingAnimation() {
-    return Builder(
-      builder: (context) {
-        final animationColor = Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5 
-            ? Colors.black 
-            : Colors.white;
-            
-        return SizedBox(
-          width: 16,
-          height: 16,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(3, (index) {
-              return TweenAnimationBuilder<double>(
-                duration: Duration(milliseconds: 600 + (index * 100)),
-                tween: Tween(begin: 4.0, end: 16.0),
-                builder: (context, value, child) {
-                  return AnimatedContainer(
-                    duration: Duration(milliseconds: 300 + (index * 50)),
-                    width: 3,
-                    height: value,
-                    decoration: BoxDecoration(
-                      color: animationColor,
-                      borderRadius: BorderRadius.circular(1.5),
-                    ),
-                  );
-                },
-                onEnd: () {
-                  // アニメーションを繰り返すためのトリガー
-                },
-              );
-            }),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildConnectionIndicator(String connectionState) {
     Color indicatorColor;
     IconData indicatorIcon;
@@ -308,6 +323,125 @@ class NowPlayingCard extends ConsumerWidget {
         ),
         child: Icon(indicatorIcon, size: 16, color: indicatorColor),
       ),
+    );
+  }
+
+  Widget _buildAnimatedLiveIndicator(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _liveAnimationController,
+        _pulseAnimationController,
+      ]),
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.secondary.withOpacity(_opacityAnimation.value),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withOpacity(0.4),
+                  blurRadius: 8,
+                  spreadRadius: _scaleAnimation.value * 2,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildWaveAnimation(context),
+                const SizedBox(width: 6),
+                _buildAnimatedText(context),
+                const SizedBox(width: 6),
+                _buildStreamIcon(context),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildWaveAnimation(BuildContext context) {
+    final color =
+        Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5
+            ? Colors.black
+            : Colors.white;
+
+    return AnimatedBuilder(
+      animation: _waveAnimation,
+      builder: (context, child) {
+        return SizedBox(
+          width: 20,
+          height: 16,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(4, (index) {
+              final delay = index * 0.25;
+              final animValue = (_waveAnimation.value + delay) % 1.0;
+              final height = 4.0 + (sin(animValue * 2 * 3.14159) * 6 + 6);
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                width: 3,
+                height: height,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              );
+            }),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnimatedText(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseAnimationController,
+      builder: (context, child) {
+        return Text(
+          'LIVE',
+          style: TextStyle(
+            color: (Theme.of(context).colorScheme.secondary.computeLuminance() >
+                        0.5
+                    ? Colors.black
+                    : Colors.white)
+                .withOpacity(_opacityAnimation.value),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStreamIcon(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _liveAnimationController,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _liveAnimationController.value * 0.1,
+          child: Icon(
+            Icons.stream,
+            color:
+                Theme.of(context).colorScheme.secondary.computeLuminance() > 0.5
+                    ? Colors.black
+                    : Colors.white,
+            size: 14,
+          ),
+        );
+      },
     );
   }
 }
