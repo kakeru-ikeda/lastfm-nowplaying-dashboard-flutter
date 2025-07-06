@@ -1,12 +1,12 @@
 {
-    "name": "lastfm_nowplaying_dashboard_flutter",
-    "short_name": "lastfm_nowplaying_dashboard_flutter",
+    "name": "Last.fm Now Playing Dashboard",
+    "short_name": "Last.fm Dashboard",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#d92323",
+    "theme_color": "#d92323",
+    "description": "Real-time music tracking and analytics dashboard with beautiful visualizations for Last.fm users.",
+    "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [
         {
