@@ -33,7 +33,7 @@ class ServerStatsCard extends ConsumerWidget {
           _formatUptime(stats.uptime),
           Colors.blue,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _buildStatItem(
           context,
           Icons.api,
@@ -41,7 +41,7 @@ class ServerStatsCard extends ConsumerWidget {
           '${stats.totalRequests}',
           Colors.green,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _buildStatItem(
           context,
           Icons.people,
@@ -49,7 +49,7 @@ class ServerStatsCard extends ConsumerWidget {
           '${stats.activeConnections}',
           Colors.orange,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _buildStatItem(
           context,
           Icons.memory,

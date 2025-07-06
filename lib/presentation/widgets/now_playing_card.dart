@@ -49,8 +49,8 @@ class NowPlayingCard extends ConsumerWidget {
           children: [
             // Album Art
             Container(
-              width: 80,
-              height: 80,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.grey[800],
@@ -69,14 +69,14 @@ class NowPlayingCard extends ConsumerWidget {
                               (context, url, error) => const Icon(
                                 Icons.music_note,
                                 color: Colors.white54,
-                                size: 40,
+                                size: 60,
                               ),
                         ),
                       )
                       : const Icon(
                         Icons.music_note,
                         color: Colors.white54,
-                        size: 40,
+                        size: 60,
                       ),
             ),
             const SizedBox(width: AppConstants.defaultPadding),
@@ -152,18 +152,21 @@ class NowPlayingCard extends ConsumerWidget {
   Widget _buildNotPlayingContent(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
-      child: Column(
-        children: [
-          Icon(Icons.music_off, size: 48, color: Colors.white38),
-          const SizedBox(height: 8),
-          Text(
-            'Nothing is playing',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
-          ),
-        ],
+      height: 120, // アートワークと同じ高さに調整
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.music_off, size: 48, color: Colors.white38),
+            const SizedBox(height: 8),
+            Text(
+              'Nothing is playing',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -171,13 +174,16 @@ class NowPlayingCard extends ConsumerWidget {
   Widget _buildLoadingContent() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
-      child: const Column(
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading now playing...'),
-        ],
+      height: 120, // アートワークと同じ高さに調整
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading now playing...'),
+          ],
+        ),
       ),
     );
   }
@@ -185,32 +191,30 @@ class NowPlayingCard extends ConsumerWidget {
   Widget _buildErrorContent(Object error) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding * 2),
-      child: Column(
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 8),
-          const Text(
-            'Connection Error',
-            style: TextStyle(
-              color: Colors.red,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+      height: 120, // アートワークと同じ高さに調整
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 32, color: Colors.red),
+            const SizedBox(height: 8),
+            const Text(
+              'Connection Error',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'WebSocketの接続に失敗しました。\nサーバーが起動しているか確認してください。',
-            style: TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Error: ${error.toString()}',
-            style: TextStyle(color: Colors.red.withOpacity(0.7), fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 4),
+            const Text(
+              'WebSocket接続に失敗',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -49,13 +49,16 @@ class DashboardPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 2, child: const NowPlayingCard()),
-                const SizedBox(width: AppConstants.defaultPadding),
-                Expanded(flex: 1, child: const ServerStatsCard()),
-              ],
+            SizedBox(
+              height: 220, // 固定の高さを設定
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: const NowPlayingCard()),
+                  const SizedBox(width: AppConstants.defaultPadding),
+                  Expanded(flex: 1, child: const ServerStatsCard()),
+                ],
+              ),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
 
