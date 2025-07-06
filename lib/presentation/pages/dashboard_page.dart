@@ -16,7 +16,16 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🎵 Last.fm Now Playing Dashboard'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/lastfm_logo.png',
+            width: 32,
+            height: 32,
+          ),
+        ),
+        title: const Text('Last.fm Now Playing Dashboard'),
+        titleSpacing: 2.0, // アイコンとタイトル間のスペースを調整
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -25,9 +34,7 @@ class DashboardPage extends ConsumerWidget {
             tooltip: 'Settings',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
           ),
