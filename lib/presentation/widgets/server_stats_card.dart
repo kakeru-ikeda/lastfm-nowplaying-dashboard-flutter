@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
 import 'section_card.dart';
+import 'app_loading_indicator.dart';
 
 class ServerStatsCard extends ConsumerWidget {
   const ServerStatsCard({super.key});
@@ -15,7 +16,7 @@ class ServerStatsCard extends ConsumerWidget {
       title: 'Server Stats',
       child: serverStatsAsync.when(
         data: (stats) => _buildStatsContent(context, stats),
-        loading: () => _buildLoadingContent(),
+        loading: () => const ServerStatsLoadingIndicator(),
         error: (error, stack) => _buildErrorContent(error),
       ),
     );
@@ -91,18 +92,6 @@ class ServerStatsCard extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildLoadingContent() {
-    return const Center(
-      child: Column(
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 8),
-          Text('Loading stats...'),
-        ],
-      ),
     );
   }
 

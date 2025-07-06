@@ -6,6 +6,7 @@ import '../../domain/entities/user_stats.dart';
 import '../../core/utils/url_helper.dart';
 import '../providers/music_providers.dart';
 import 'section_card.dart';
+import 'app_loading_indicator.dart';
 
 class UserStatsCard extends ConsumerWidget {
   const UserStatsCard({super.key});
@@ -17,7 +18,7 @@ class UserStatsCard extends ConsumerWidget {
     return SectionCard(
       child: userStatsAsync.when(
         data: (userStats) => _UserStatsContent(userStats: userStats),
-        loading: () => const _LoadingContent(),
+        loading: () => const UserStatsLoadingIndicator(),
         error: (error, stack) => _ErrorContent(error: error.toString()),
       ),
     );
@@ -277,34 +278,6 @@ class _StatItem extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoadingContent extends StatelessWidget {
-  const _LoadingContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 120,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Loading...',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
         ),
       ),
     );

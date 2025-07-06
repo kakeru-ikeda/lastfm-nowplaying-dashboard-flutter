@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/utils/url_helper.dart';
 import 'section_card.dart';
+import 'app_loading_indicator.dart';
 
 class NowPlayingCard extends ConsumerStatefulWidget {
   const NowPlayingCard({super.key});
@@ -94,7 +95,7 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
       trailing: _buildConnectionIndicator(connectionState),
       child: nowPlayingAsync.when(
         data: (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
-        loading: () => _buildLoadingContent(),
+        loading: () => const NowPlayingLoadingIndicator(),
         error: (error, stack) => _buildErrorContent(error),
       ),
     );
@@ -134,7 +135,7 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                         imageUrl: nowPlaying.imageUrl!,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(),
+                          child: ImageLoadingIndicator(),
                         ),
                         errorWidget: (context, url, error) => Icon(
                           Icons.music_note,
@@ -227,23 +228,6 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                     ).textTheme.bodyLarge?.color?.withOpacity(0.6),
                   ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingContent() {
-    return Container(
-      width: double.infinity,
-      height: 120, // アートワークと同じ高さに調整
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading now playing...'),
           ],
         ),
       ),

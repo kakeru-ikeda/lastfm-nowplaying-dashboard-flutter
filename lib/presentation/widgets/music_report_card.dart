@@ -6,6 +6,7 @@ import '../../core/constants/app_constants.dart';
 import 'section_card.dart';
 import 'clickable_track_item.dart';
 import 'clickable_artist_item.dart';
+import 'app_loading_indicator.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -20,7 +21,7 @@ class MusicReportCard extends ConsumerWidget {
       title: 'Music Report',
       child: reportAsync.when(
         data: (report) => _buildReportContent(context, report),
-        loading: () => _buildLoadingContent(),
+        loading: () => const ReportLoadingIndicator(),
         error: (error, stack) => _buildErrorContent(error),
       ),
     );
@@ -241,22 +242,6 @@ class MusicReportCard extends ConsumerWidget {
           ),
         ),
         padding: const EdgeInsets.all(0),
-      ),
-    );
-  }
-
-  Widget _buildLoadingContent() {
-    return SizedBox(
-      height: 200,
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading report...'),
-          ],
-        ),
       ),
     );
   }

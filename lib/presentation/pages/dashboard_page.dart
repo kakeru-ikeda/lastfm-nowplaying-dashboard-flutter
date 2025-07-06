@@ -4,6 +4,7 @@ import '../widgets/now_playing_card.dart';
 import '../widgets/recent_tracks_card.dart';
 import '../widgets/user_stats_card.dart';
 import '../widgets/simple_card.dart';
+import '../widgets/app_loading_indicator.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import 'music_reports_page.dart';
@@ -106,7 +107,10 @@ class RecentTracksSection extends ConsumerWidget {
       loading:
           () => SimpleCard(
             height: 200,
-            child: const Center(child: CircularProgressIndicator()),
+            child: const AppLoadingIndicator(
+              height: 200,
+              text: 'Loading recent tracks...',
+            ),
           ),
       error:
           (error, stackTrace) => SimpleCard(
