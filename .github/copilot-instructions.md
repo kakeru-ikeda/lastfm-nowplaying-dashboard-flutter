@@ -2,15 +2,17 @@
 
 # Last.fm Now Playing ダッシュボード - Flutter Web アプリケーション
 
-これは、Last.fm API バックエンドサーバーに接続して、現在再生中の情報と音楽レポートを視覚的コンポーネントで表示する Flutter Web アプリケーションです。
+これは、Last.fm API バックエンドサーバーに接続して、現在再生中の情報と音楽レポートを視覚的コンポーネントで表示する Flutter Web アプリケーションです。Clean ArchitectureとRiverpod状態管理を採用し、アニメーション機能とテーマ切り替え機能を備えています。
 
 ## アーキテクチャガイドライン
 
 - **レイヤードアーキテクチャ**: プレゼンテーション、ドメイン、データ、インフラストラクチャレイヤー間の厳密な分離に従う
 - **状態管理**: 適切なプロバイダーでRiverpodをすべての状態管理に使用する
 - **UIコンポーネント**: `presentation/widgets` ディレクトリに再利用可能なコンポーネントを作成する
+- **アニメーション設計**: TickerProviderStateMixinを使用した複数のAnimationControllerの効率的な管理
 - **横向きレイアウト**: ランドスケープ/横向き画面の向きに合わせて設計する
 - **レスポンシブデザイン**: 異なる画面サイズに対応するレスポンシブフレームワークを使用する
+- **テーマ管理**: SharedPreferencesを使用した設定の永続化とRiverpodによる状態管理
 
 ## 主要技術
 
@@ -20,6 +22,10 @@
 - Freezed（イミュータブルデータクラス）
 - JSON シリアライゼーション
 - FlChart（チャートとグラフ）
+- CachedNetworkImage（画像キャッシュ）
+- SharedPreferences（設定永続化）
+- Google Fonts（タイポグラフィ）
+- Animation Controllers（アニメーション効果）
 
 ## バックエンドAPI
 
@@ -75,3 +81,24 @@ lib/
 - AppLoggerを使用してnull安全なログ出力を行う
 - WebSocketとAPI通信では適切なエラーハンドリングを実装する
 - UIコンポーネントではnull値に対するフォールバック表示を提供する
+- TickerProviderStateMixinを使用してアニメーションコントローラーを効率的に管理する
+- アニメーションコントローラーはdispose()で適切に破棄する
+- クリック可能な要素にはMouseRegionとGestureDetectorを組み合わせて使用する
+- UrlHelperを使用してLast.fm URLの生成と新しいタブでの開放を実装する
+- テーマ設定はSharedPreferencesで永続化し、Riverpodで状態管理する
+
+## アニメーション実装ガイドライン
+
+- 複数のアニメーションには個別のAnimationControllerを使用する
+- アニメーションの開始はinitState()で、停止はdispose()で実行する
+- CurvedAnimationを使用して自然なアニメーション効果を実現する
+- リピートアニメーションには適切なreverse設定を行う
+- AnimatedBuilderでアニメーション値を効率的にリッスンする
+
+## UI/UXパターン
+
+- SectionCardを使用して統一されたカードレイアウトを作成する
+- ClickableTrackItemとClickableArtistItemでインタラクティブな要素を実装する
+- ローディング、エラー、空の状態に対して適切なフォールバック表示を提供する
+- マウスカーソルの変更でユーザビリティを向上させる
+- アニメーション付きインジケーターでリアルタイム状態を表現する
