@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../core/constants/app_constants.dart';
 import 'section_card.dart';
+import 'clickable_track_item.dart';
 
 class RecentTracksCard extends ConsumerWidget {
   final List<RecentTrackInfo> tracks;
@@ -50,98 +51,25 @@ class RecentTracksCard extends ConsumerWidget {
                     (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final track = filteredTracks[index];
-                  return _RecentTrackTile(track: track);
+                  return ClickableTrackItem(
+                    artist: track.artist,
+                    track: track.track,
+                    album: track.album.isNotEmpty ? track.album : null,
+                    imageUrl: track.imageUrl.isNotEmpty ? track.imageUrl : null,
+                    trailing: track.playedAt != null
+                        ? Text(
+                            _formatPlayedAt(track.playedAt!),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          )
+                        : null,
+                  );
                 },
               ),
             ),
         ],
       ),
-    );
-  }
-}
-
-class _RecentTrackTile extends StatelessWidget {
-  final RecentTrackInfo track;
-
-  const _RecentTrackTile({Key? key, required this.track}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-      leading: _buildAlbumArt(),
-      title: Text(
-        track.track.isNotEmpty ? track.track : 'Unknown Track',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            track.artist.isNotEmpty ? track.artist : 'Unknown Artist',
-            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (track.album.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              track.album,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey[500],
-                fontSize: 11,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          if (track.playedAt != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              _formatPlayedAt(track.playedAt!),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey[400],
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ],
-      ),
-      // 現在再生中のトラックは既にフィルタリングされているため、trailing iconは不要
-    );
-  }
-
-  Widget _buildAlbumArt() {
-    if (track.imageUrl.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Image.network(
-          track.imageUrl,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildDefaultArt(),
-        ),
-      );
-    }
-    return _buildDefaultArt();
-  }
-
-  Widget _buildDefaultArt() {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Icon(Icons.music_note, color: Colors.grey, size: 24),
     );
   }
 

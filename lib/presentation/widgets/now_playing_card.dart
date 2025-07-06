@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/url_helper.dart';
 import 'section_card.dart';
 
 class NowPlayingCard extends ConsumerWidget {
@@ -32,105 +33,119 @@ class NowPlayingCard extends ConsumerWidget {
       return _buildNotPlayingContent(context);
     }
 
-    return Row(
-      children: [
-        // Album Art
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.grey[800],
-          ),
-          child:
-              nowPlaying.imageUrl != null
-                  ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: nowPlaying.imageUrl!,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) =>
-                              const Center(child: CircularProgressIndicator()),
-                      errorWidget:
-                          (context, url, error) => const Icon(
-                            Icons.music_note,
-                            color: Colors.white54,
-                            size: 40,
-                          ),
-                    ),
-                  )
-                  : const Icon(
-                    Icons.music_note,
-                    color: Colors.white54,
-                    size: 40,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (nowPlaying.artist != null && nowPlaying.track != null) {
+            final url = UrlHelper.generateLastfmTrackUrl(
+              nowPlaying.artist!, 
+              nowPlaying.track!
+            );
+            UrlHelper.openInNewTab(url);
+          }
+        },
+        child: Row(
+          children: [
+            // Album Art
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[800],
+              ),
+              child:
+                  nowPlaying.imageUrl != null
+                      ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: nowPlaying.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) =>
+                                  const Center(child: CircularProgressIndicator()),
+                          errorWidget:
+                              (context, url, error) => const Icon(
+                                Icons.music_note,
+                                color: Colors.white54,
+                                size: 40,
+                              ),
+                        ),
+                      )
+                      : const Icon(
+                        Icons.music_note,
+                        color: Colors.white54,
+                        size: 40,
+                      ),
+            ),
+            const SizedBox(width: AppConstants.defaultPadding),
+
+            // Track Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nowPlaying.track ?? 'Unknown Track',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-        ),
-        const SizedBox(width: AppConstants.defaultPadding),
+                  const SizedBox(height: 4),
+                  Text(
+                    nowPlaying.artist ?? 'Unknown Artist',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (nowPlaying.album != null && nowPlaying.album!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      nowPlaying.album!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
 
-        // Track Info
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                nowPlaying.track ?? 'Unknown Track',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            // Playing Indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(AppConstants.primaryColorValue),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 4),
-              Text(
-                nowPlaying.artist ?? 'Unknown Artist',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildPlayingAnimation(),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.stream, color: Colors.white, size: 12),
+                ],
               ),
-              if (nowPlaying.album != null && nowPlaying.album!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  nowPlaying.album!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.white54),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
-
-        // Playing Indicator
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(AppConstants.primaryColorValue),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPlayingAnimation(),
-              const SizedBox(width: 4),
-              const Text(
-                'LIVE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.stream, color: Colors.white, size: 12),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
