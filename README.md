@@ -108,52 +108,9 @@ lib/
    ```
 
 4. **アプリケーションを実行**
-
-   **オプション1: ワンクリック起動（推奨）**
    ```bash
-   # HTTP版（通常）
-   ./start.sh
-   
-   # HTTPS版（Chromeの「保護されていない通信」バナーを回避）
-   ./start-https.sh
-   # または
-   ./start.sh --https
-   ```
-
-   **オプション2: 手動起動**
-   ```bash
-   # Flutter Web開発サーバー
    flutter run -d chrome
-   
-   # または、本番用ビルド＋Node.jsサーバー
-   npm run build:serve        # HTTP版
-   npm run build:serve:https  # HTTPS版
    ```
-
-### 🔒 HTTPS起動について
-
-Chromeの「保護されていない通信」バナーを回避するために、自己署名証明書を使用したHTTPSサーバーを提供しています：
-
-- **HTTPSサーバー**: `https://localhost:6443`
-- **HTTPサーバー**: `http://localhost:6001`（従来通り）
-
-#### HTTPS初回起動時の注意
-1. ブラウザでセキュリティ警告が表示されます
-2. 「詳細設定」→「localhost にアクセスする（安全ではありません）」をクリック
-3. 以降はバナーが表示されなくなります
-
-#### 利用できるコマンド
-```bash
-# HTTPS版サーバー起動
-npm run start:https
-npm run dev:https          # 開発モード（ファイル変更時自動再起動）
-npm run build:serve:https  # ビルド＋HTTPS起動
-
-# HTTP版サーバー起動（従来通り）
-npm start
-npm run dev
-npm run build:serve
-```
 
 ### 開発コマンド
 
