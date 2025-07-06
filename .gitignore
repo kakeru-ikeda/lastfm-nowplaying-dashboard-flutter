@@ -63,3 +63,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# HTTPS証明書ファイル
+localhost.crt
+localhost.key
