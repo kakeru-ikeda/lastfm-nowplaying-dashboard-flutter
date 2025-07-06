@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'presentation/pages/dashboard_page.dart';
 import 'presentation/providers/theme_providers.dart';
@@ -8,7 +7,7 @@ import 'presentation/providers/theme_providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final sharedPreferences = await SharedPreferences.getInstance();
-  
+
   runApp(ProviderScope(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(sharedPreferences),
