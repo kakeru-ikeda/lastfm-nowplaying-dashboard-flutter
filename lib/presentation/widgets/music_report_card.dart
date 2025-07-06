@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import 'section_title.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -19,21 +20,10 @@ class MusicReportCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.bar_chart,
-                  color: Color(AppConstants.primaryColorValue),
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Music Report',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            SectionTitle(
+              icon: Icons.bar_chart,
+              iconColor: const Color(AppConstants.primaryColorValue),
+              title: 'Music Report',
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             reportAsync.when(

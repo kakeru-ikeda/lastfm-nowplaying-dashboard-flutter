@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import 'section_title.dart';
 
 class NowPlayingCard extends ConsumerWidget {
   const NowPlayingCard({super.key});
@@ -18,23 +19,11 @@ class NowPlayingCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.music_note,
-                  color: Color(AppConstants.primaryColorValue),
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Now Playing',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                _buildConnectionIndicator(connectionState),
-              ],
+            SectionTitle(
+              icon: Icons.music_note,
+              iconColor: const Color(AppConstants.primaryColorValue),
+              title: 'Now Playing',
+              trailing: _buildConnectionIndicator(connectionState),
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             nowPlayingAsync.when(

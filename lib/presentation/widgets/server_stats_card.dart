@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import 'section_title.dart';
 
 class ServerStatsCard extends ConsumerWidget {
   const ServerStatsCard({super.key});
@@ -16,21 +17,10 @@ class ServerStatsCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.analytics,
-                  color: Color(AppConstants.accentColorValue),
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Server Stats',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            SectionTitle(
+              icon: Icons.analytics,
+              iconColor: const Color(AppConstants.accentColorValue),
+              title: 'Server Stats',
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             serverStatsAsync.when(

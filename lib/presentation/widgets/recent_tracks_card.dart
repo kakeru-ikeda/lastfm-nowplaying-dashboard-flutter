@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../core/constants/app_constants.dart';
+import 'section_title.dart';
 
 class RecentTracksCard extends ConsumerWidget {
   final List<RecentTrackInfo> tracks;
@@ -12,8 +13,6 @@ class RecentTracksCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
     // 現在再生中のトラックを履歴から除外
     final filteredTracks = tracks.where((track) => !track.isPlaying).toList();
 
@@ -27,22 +26,18 @@ class RecentTracksCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '最近の再生履歴',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (onRefresh != null)
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: onRefresh,
-                    tooltip: '更新',
-                  ),
-              ],
+            SectionTitle(
+              icon: Icons.history,
+              iconColor: const Color(AppConstants.primaryColorValue),
+              title: '最近の再生履歴',
+              trailing:
+                  onRefresh != null
+                      ? IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: onRefresh,
+                        tooltip: '更新',
+                      )
+                      : null,
             ),
             const SizedBox(height: AppConstants.defaultPadding),
             if (filteredTracks.isEmpty)
