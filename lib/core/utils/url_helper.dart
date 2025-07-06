@@ -11,6 +11,14 @@ class UrlHelper {
     return 'https://www.last.fm/music/$encodedArtist/_/$encodedTrack';
   }
 
+  /// Last.fmのアーティストページURLを生成
+  /// 
+  /// アーティスト名をURLエンコードしてLast.fmのURLに変換します
+  static String generateLastfmArtistUrl(String artist) {
+    final encodedArtist = Uri.encodeComponent(artist);
+    return 'https://www.last.fm/music/$encodedArtist';
+  }
+
   /// 新しいタブでURLを開く
   /// 
   /// Web環境でのみ動作します

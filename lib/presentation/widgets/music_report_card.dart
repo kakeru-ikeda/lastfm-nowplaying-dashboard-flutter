@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import 'section_card.dart';
+import 'clickable_track_item.dart';
+import 'clickable_artist_item.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -211,74 +212,18 @@ class MusicReportCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: Colors.grey[800],
-            ),
-            child:
-                imageUrl != null && imageUrl.isNotEmpty
-                    ? ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => const Icon(
-                              Icons.music_note,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                        errorWidget:
-                            (context, url, error) => const Icon(
-                              Icons.music_note,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                      ),
-                    )
-                    : const Icon(
-                      Icons.music_note,
-                      color: Colors.white54,
-                      size: 20,
-                    ),
+      child: ClickableTrackItem(
+        artist: track.artist.name,
+        track: track.name,
+        imageUrl: imageUrl?.isNotEmpty == true ? imageUrl : null,
+        trailing: Text(
+          '${track.playcount}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: const Color(AppConstants.primaryColorValue),
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  track.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  track.artist.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.white70),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${track.playcount}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(AppConstants.primaryColorValue),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+        ),
+        padding: const EdgeInsets.all(0),
       ),
     );
   }
@@ -288,57 +233,17 @@ class MusicReportCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.grey[800],
-            ),
-            child:
-                imageUrl != null && imageUrl.isNotEmpty
-                    ? ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => const Icon(
-                              Icons.person,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                        errorWidget:
-                            (context, url, error) => const Icon(
-                              Icons.person,
-                              color: Colors.white54,
-                              size: 20,
-                            ),
-                      ),
-                    )
-                    : const Icon(Icons.person, color: Colors.white54, size: 20),
+      child: ClickableArtistItem(
+        artist: artist.name,
+        imageUrl: imageUrl?.isNotEmpty == true ? imageUrl : null,
+        trailing: Text(
+          '${artist.playcount}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: const Color(AppConstants.primaryColorValue),
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              artist.name,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Text(
-            '${artist.playcount}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(AppConstants.primaryColorValue),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+        ),
+        padding: const EdgeInsets.all(0),
       ),
     );
   }
