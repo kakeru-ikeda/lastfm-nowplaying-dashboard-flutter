@@ -5,12 +5,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:https": "./start.sh https",
     "dev": "nodemon server.js",
     "clean": "flutter clean",
     "deps": "flutter pub get",
     "generate": "dart run build_runner build --delete-conflicting-outputs",
-    "build": "npm run clean && npm run deps && npm run generate && flutter build web --web-renderer html --no-tree-shake-icons",
-    "build:serve": "npm run build && npm start"
+    "build": "npm run clean && npm run deps && npm run generate && flutter build web --no-tree-shake-icons",
+    "build:serve": "./start.sh",
+    "build:https": "./start.sh https",
+    "cert:create": "mkcert localhost 127.0.0.1 ::1 192.168.40.99",
+    "cert:install": "mkcert -install"
   },
   "dependencies": {
     "express": "^4.18.2",

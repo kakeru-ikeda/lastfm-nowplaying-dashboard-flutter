@@ -260,6 +260,76 @@ flutter build web --release
 flutter run -d chrome --web-port 8080
 ```
 
+## 🔒 HTTPS配信（推奨）
+
+アプリケーションをHTTPS経由で安全に配信するために、`mkcert`を使用した証明書設定を行います。
+
+### セットアップ手順
+
+1. **mkcertのインストール**:
+   ```bash
+   # macOS
+   brew install mkcert
+   
+   # Windows
+   choco install mkcert
+   ```
+
+2. **証明書のインストール**:
+   ```bash
+   mkcert -install
+   ```
+
+3. **証明書の作成**:
+   ```bash
+   npm run cert:create
+   # または
+   mkcert localhost 127.0.0.1 ::1 192.168.40.99
+   ```
+
+4. **アプリケーションのビルドと起動**:
+   ```bash
+   # HTTPSモード
+   ./start.sh https
+   # または
+   npm run build:https
+   
+   # HTTPモード
+   ./start.sh
+   # または
+   npm run build:serve
+   ```
+
+### HTTPSアクセス
+
+- **ローカル**: https://localhost
+- **IP**: https://127.0.0.1
+- **ネットワーク**: https://192.168.40.99
+
+### 利点
+
+- ✅ Chromeの警告バナーなし
+- ✅ `--unsafely-treat-insecure-origin-as-secure`フラグ不要
+- ✅ Service Worker、WebSocket、位置情報APIなどの制限なし
+- ✅ 本番環境に近い開発環境
+
+---
+
+## 📦 従来のHTTP配信
+
+従来のHTTP配信も引き続き利用可能です：
+
+```bash
+# HTTPモード
+./start.sh
+# または
+npm run build:serve
+```
+
+アクセス: http://localhost:6001
+
+---
+
 ## 📄 ライセンス
 
 MIT
