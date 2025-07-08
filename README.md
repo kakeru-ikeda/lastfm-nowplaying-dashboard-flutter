@@ -138,6 +138,65 @@ flutter test
 - これらのファイルは**Gitから除外**されています（.gitignore） - クローン後にコード生成を実行してください
 - エンティティクラスを変更するプルリクエストの後は、必ず `dart run build_runner build` を実行してください
 
+## 🌐 API設定と環境変数
+
+アプリケーションは`.env`ファイルを使用してAPIサーバーの設定を管理します。
+
+### 環境変数
+
+| 変数名 | デフォルト値 | 説明 |
+|--------|-------------|------|
+| `API_HOST` | `localhost` | APIサーバーのホスト名またはIPアドレス |
+| `API_PORT` | `3001` | APIサーバーのポート番号 |
+| `API_PROTOCOL` | `http` | APIサーバーのプロトコル (http/https) |
+
+### セットアップ手順
+
+1. **環境変数ファイルの作成**:
+   ```bash
+   npm run env:setup
+   # または手動で
+   cp .env.example .env
+   ```
+
+2. **.envファイルの編集**:
+   ```bash
+   # .envファイルを編集して適切な値を設定
+   nano .env
+   ```
+
+3. **設定例（.envファイル内）**:
+   ```bash
+   # ローカル開発（デフォルト）
+   API_HOST=localhost
+   API_PORT=3001
+   API_PROTOCOL=http
+   
+   # ネットワーク接続
+   API_HOST=192.168.40.99
+   API_PORT=3001
+   API_PROTOCOL=https
+   
+   # 本番環境
+   API_HOST=api.example.com
+   API_PORT=443
+   API_PROTOCOL=https
+   ```
+
+### 使用方法
+
+```bash
+# .envファイルの設定が自動的に適用されます
+./start.sh https
+
+# または
+npm run build:https
+```
+
+> **注意**: `.env`ファイルはGitignoreに含まれており、リポジトリにはコミットされません。各環境で個別に作成・設定してください。
+
+---
+
 ## 📱 レスポンシブデザイン
 
 異なる画面サイズに最適化：

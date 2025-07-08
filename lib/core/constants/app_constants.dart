@@ -1,7 +1,21 @@
 class AppConstants {
-  // API Configuration
-  static const String baseUrl = 'http://localhost:3001';
-  static const String wsUrl = 'ws://localhost:3001';
+  // API Configuration - 環境変数対応
+  static const String _defaultHost = 'localhost';
+  static const String _defaultPort = '3001';
+  static const String _defaultProtocol = 'http';
+
+  static String get apiHost =>
+      const String.fromEnvironment('API_HOST', defaultValue: _defaultHost);
+  static String get apiPort =>
+      const String.fromEnvironment('API_PORT', defaultValue: _defaultPort);
+  static String get apiProtocol => const String.fromEnvironment('API_PROTOCOL',
+      defaultValue: _defaultProtocol);
+
+  static String get baseUrl => '$apiProtocol://$apiHost:$apiPort';
+  static String get wsUrl {
+    final wsProtocol = apiProtocol == 'https' ? 'wss' : 'ws';
+    return '$wsProtocol://$apiHost:$apiPort';
+  }
 
   // API Endpoints
   static const String healthEndpoint = '/health';

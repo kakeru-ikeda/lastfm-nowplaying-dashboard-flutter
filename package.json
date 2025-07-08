@@ -14,13 +14,15 @@
     "build:serve": "./start.sh",
     "build:https": "./start.sh https",
     "cert:create": "mkcert localhost 127.0.0.1 ::1 192.168.40.99",
-    "cert:install": "mkcert -install"
+    "cert:install": "mkcert -install",
+    "env:setup": "cp .env.example .env && echo '✅ .envファイルを作成しました。必要に応じて編集してください。'"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "compression": "^1.7.4",
-    "helmet": "^7.0.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^17.1.0",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

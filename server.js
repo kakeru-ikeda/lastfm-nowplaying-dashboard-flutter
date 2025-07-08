@@ -6,6 +6,9 @@ const compression = require('compression');
 const helmet = require('helmet');
 const cors = require('cors');
 
+// .envファイルの読み込み
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 443;
 const BUILD_PATH = path.join(__dirname, 'build', 'web');
