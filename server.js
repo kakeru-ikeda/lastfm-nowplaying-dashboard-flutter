@@ -10,7 +10,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 8443;
+const PORT = process.env.PORT || 8444;
 const BUILD_PATH = path.join(__dirname, 'build', 'web');
 
 // HTTPS証明書の設定
@@ -27,12 +27,14 @@ app.use(helmet({
 // CORS設定（HTTPS用に更新）
 app.use(cors({
     origin: [
-        'https://localhost:8443', 
+        'https://localhost:8444', 
         'https://localhost', 
-        'https://127.0.0.1:8443',
+        'https://127.0.0.1:8444',
         'https://127.0.0.1',
-        'https://192.168.40.99:8443',
+        'https://192.168.40.99:8444',
         'https://192.168.40.99',
+        'http://localhost:8080',
+        'https://localhost:8080',
         'http://localhost:3001'
     ],
     credentials: true

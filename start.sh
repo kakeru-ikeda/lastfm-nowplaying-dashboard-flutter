@@ -59,7 +59,7 @@ echo "⚙️ Generating Freezed and JSON serialization code..."
 dart run build_runner build --delete-conflicting-outputs
 
 echo "🔨 Building Flutter Web application..."
-flutter build web --dart-define=API_HOST=$API_HOST --dart-define=API_PORT=$API_PORT --dart-define=API_PROTOCOL=$API_PROTOCOL --no-tree-shake-icons
+flutter build web --web-renderer html --dart-define=API_HOST=$API_HOST --dart-define=API_PORT=$API_PORT --dart-define=API_PROTOCOL=$API_PROTOCOL --no-tree-shake-icons
 
 echo "📦 Installing Node.js dependencies..."
 npm install
