@@ -10,7 +10,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 8443;
 const BUILD_PATH = path.join(__dirname, 'build', 'web');
 
 // HTTPS証明書の設定
@@ -27,9 +27,11 @@ app.use(helmet({
 // CORS設定（HTTPS用に更新）
 app.use(cors({
     origin: [
+        'https://localhost:8443', 
         'https://localhost', 
-        'https://localhost:443', 
+        'https://127.0.0.1:8443',
         'https://127.0.0.1',
+        'https://192.168.40.99:8443',
         'https://192.168.40.99',
         'http://localhost:3001'
     ],
@@ -100,12 +102,12 @@ app.use((err, req, res, next) => {
 // HTTPSサーバー起動
 const server = https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Flutter Web HTTPS Server running on:`);
-    console.log(`   👉 https://localhost${PORT === 443 ? '' : ':' + PORT}`);
-    console.log(`   👉 https://127.0.0.1${PORT === 443 ? '' : ':' + PORT}`);
-    console.log(`   👉 https://192.168.40.99${PORT === 443 ? '' : ':' + PORT}`);
+    console.log(`   👉 https://localhost:${PORT}`);
+    console.log(`   👉 https://127.0.0.1:${PORT}`);
+    console.log(`   👉 https://192.168.40.99:${PORT}`);
     console.log(`📁 Serving files from: ${BUILD_PATH}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`💾 Health check available at: https://localhost${PORT === 443 ? '' : ':' + PORT}/health`);
+    console.log(`💾 Health check available at: https://localhost:${PORT}/health`);
     console.log(`🛡️ HTTPS enabled with mkcert certificate`);
 });
 
