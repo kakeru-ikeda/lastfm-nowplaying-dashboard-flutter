@@ -1,7 +1,7 @@
 class AppConstants {
   // API Configuration - 環境変数対応
   static const String _defaultHost = 'localhost';
-  static const String _defaultPort = '8444';
+  static const String _defaultPort = '8443';
   static const String _defaultProtocol = 'https';
 
   static String get apiHost =>
