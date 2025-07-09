@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start:https": "./start.sh https",
     "dev": "nodemon server.js",
     "clean": "flutter clean",
     "deps": "flutter pub get",
