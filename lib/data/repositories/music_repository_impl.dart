@@ -3,6 +3,7 @@ import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../domain/entities/user_stats.dart';
+import '../../domain/entities/stats_response.dart';
 import '../../domain/repositories/music_repository.dart';
 import '../../core/errors/failure.dart';
 import '../../core/errors/exceptions.dart';
@@ -34,9 +35,10 @@ class MusicRepositoryImpl implements MusicRepository {
   }
 
   @override
-  Future<Either<Failure, MusicReport>> getReport(String period) async {
+  Future<Either<Failure, MusicReport>> getReport(String period,
+      {String? date}) async {
     try {
-      final result = await remoteDataSource.getReport(period);
+      final result = await remoteDataSource.getReport(period, date: date);
       return Right(result);
     } on NetworkException catch (e) {
       AppLogger.error('Network error in getReport', e);
@@ -45,7 +47,11 @@ class MusicRepositoryImpl implements MusicRepository {
       );
     } on ServerException catch (e) {
       AppLogger.error('Server error in getReport', e);
-      return Left(Failure.server(message: e.message, statusCode: e.statusCode));
+      return Left(Failure.server(
+        message: e.message,
+        statusCode: e.statusCode,
+        errorCode: e.errorCode,
+      ));
     } catch (e) {
       AppLogger.error('Unknown error in getReport', e);
       return Left(Failure.unknown(message: e.toString()));
@@ -149,6 +155,66 @@ class MusicRepositoryImpl implements MusicRepository {
       return Left(Failure.server(message: e.message, statusCode: e.statusCode));
     } catch (e) {
       AppLogger.error('Unknown error in getUserStats', e);
+      return Left(Failure.unknown(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats(
+      {String? date}) async {
+    try {
+      final result = await remoteDataSource.getWeekDailyStats(date: date);
+      return Right(result);
+    } on NetworkException catch (e) {
+      AppLogger.error('Network error in getWeekDailyStats', e);
+      return Left(
+        Failure.network(message: e.message, statusCode: e.statusCode),
+      );
+    } on ServerException catch (e) {
+      AppLogger.error('Server error in getWeekDailyStats', e);
+      return Left(Failure.server(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      AppLogger.error('Unknown error in getWeekDailyStats', e);
+      return Left(Failure.unknown(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats(
+      {String? date}) async {
+    try {
+      final result = await remoteDataSource.getMonthWeeklyStats(date: date);
+      return Right(result);
+    } on NetworkException catch (e) {
+      AppLogger.error('Network error in getMonthWeeklyStats', e);
+      return Left(
+        Failure.network(message: e.message, statusCode: e.statusCode),
+      );
+    } on ServerException catch (e) {
+      AppLogger.error('Server error in getMonthWeeklyStats', e);
+      return Left(Failure.server(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      AppLogger.error('Unknown error in getMonthWeeklyStats', e);
+      return Left(Failure.unknown(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats(
+      {String? year}) async {
+    try {
+      final result = await remoteDataSource.getYearMonthlyStats(year: year);
+      return Right(result);
+    } on NetworkException catch (e) {
+      AppLogger.error('Network error in getYearMonthlyStats', e);
+      return Left(
+        Failure.network(message: e.message, statusCode: e.statusCode),
+      );
+    } on ServerException catch (e) {
+      AppLogger.error('Server error in getYearMonthlyStats', e);
+      return Left(Failure.server(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      AppLogger.error('Unknown error in getYearMonthlyStats', e);
       return Left(Failure.unknown(message: e.toString()));
     }
   }

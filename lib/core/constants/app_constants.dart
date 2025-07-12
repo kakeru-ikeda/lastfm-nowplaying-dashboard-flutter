@@ -25,6 +25,11 @@ class AppConstants {
   static const String reportsEndpoint = '/api/reports';
   static const String recentTracksEndpoint = '/api/recent-tracks';
 
+  // Detailed Stats Endpoints
+  static const String weekDailyStatsEndpoint = '/api/stats/week-daily';
+  static const String monthWeeklyStatsEndpoint = '/api/stats/month-weekly';
+  static const String yearMonthlyStatsEndpoint = '/api/stats/year-monthly';
+
   // UI Constants
   static const double defaultPadding = 16.0;
   static const double cardBorderRadius = 12.0;

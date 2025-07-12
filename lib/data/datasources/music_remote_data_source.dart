@@ -7,11 +7,12 @@ import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../domain/entities/user_stats.dart';
+import '../../domain/entities/stats_response.dart';
 import '../../core/utils/helpers.dart';
 
 abstract class MusicRemoteDataSource {
   Future<NowPlayingInfo> getNowPlaying();
-  Future<MusicReport> getReport(String period);
+  Future<MusicReport> getReport(String period, {String? date});
   Future<ServerStats> getServerStats();
   Future<UserStats> getUserStats();
   Future<HealthCheckResponse> getHealthCheck();
@@ -21,6 +22,9 @@ abstract class MusicRemoteDataSource {
     DateTime? from,
     DateTime? to,
   });
+  Future<WeekDailyStatsResponse> getWeekDailyStats({String? date});
+  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats({String? date});
+  Future<YearMonthlyStatsResponse> getYearMonthlyStats({String? year});
   Stream<NowPlayingInfo> getNowPlayingStream();
   void closeWebSocket();
 }
@@ -86,12 +90,14 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   }
 
   @override
-  Future<MusicReport> getReport(String period) async {
+  Future<MusicReport> getReport(String period, {String? date}) async {
     try {
+      final uri = Uri.parse(
+        '${AppConstants.baseUrl}${AppConstants.reportsEndpoint}/$period${date != null ? '?date=$date' : ''}',
+      );
+
       final response = await httpClient.get(
-        Uri.parse(
-          '${AppConstants.baseUrl}${AppConstants.reportsEndpoint}/$period',
-        ),
+        uri,
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -122,6 +128,7 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
           throw ServerException(
             jsonData['error'] ?? 'Unknown server error',
             statusCode: response.statusCode,
+            errorCode: jsonData['code'],
           );
         }
       } else {
@@ -220,7 +227,7 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
           // APIレスポンスの詳細なログ出力
           AppLogger.debug('User Stats Data Structure: ${jsonData['data']}');
           AppLogger.debug('Profile Data: ${jsonData['data']['profile']}');
-          
+
           return UserStats.fromJson(jsonData['data'] as Map<String, dynamic>);
         } else {
           throw ServerException(
@@ -347,6 +354,176 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
       }
     } catch (e) {
       AppLogger.error('getRecentTracks error', e);
+      if (e is AppException) rethrow;
+      throw NetworkException('Network error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<WeekDailyStatsResponse> getWeekDailyStats({String? date}) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConstants.baseUrl}${AppConstants.weekDailyStatsEndpoint}${date != null ? '?date=$date' : ''}',
+      );
+
+      final response = await httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      AppLogger.debug('Week Daily Stats API Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        AppLogger.debug('API Response Body: $responseBody');
+
+        if (responseBody.isEmpty) {
+          throw ServerException(
+            'Empty response body',
+            statusCode: response.statusCode,
+          );
+        }
+
+        final jsonData = JsonHelper.safeDecode(responseBody);
+        if (jsonData == null) {
+          throw ServerException(
+            'Invalid JSON response',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          return WeekDailyStatsResponse.fromJson(
+              jsonData['data'] as Map<String, dynamic>);
+        } else {
+          throw ServerException(
+            jsonData['error'] ?? 'Unknown server error',
+            statusCode: response.statusCode,
+            errorCode: jsonData['code'],
+          );
+        }
+      } else {
+        throw NetworkException(
+          'Failed to fetch week daily stats',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.error('getWeekDailyStats error', e);
+      if (e is AppException) rethrow;
+      throw NetworkException('Network error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats({String? date}) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConstants.baseUrl}${AppConstants.monthWeeklyStatsEndpoint}${date != null ? '?date=$date' : ''}',
+      );
+
+      final response = await httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      AppLogger.debug(
+          'Month Weekly Stats API Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        AppLogger.debug('API Response Body: $responseBody');
+
+        if (responseBody.isEmpty) {
+          throw ServerException(
+            'Empty response body',
+            statusCode: response.statusCode,
+          );
+        }
+
+        final jsonData = JsonHelper.safeDecode(responseBody);
+        if (jsonData == null) {
+          throw ServerException(
+            'Invalid JSON response',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          return MonthWeeklyStatsResponse.fromJson(
+              jsonData['data'] as Map<String, dynamic>);
+        } else {
+          throw ServerException(
+            jsonData['error'] ?? 'Unknown server error',
+            statusCode: response.statusCode,
+            errorCode: jsonData['code'],
+          );
+        }
+      } else {
+        throw NetworkException(
+          'Failed to fetch month weekly stats',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.error('getMonthWeeklyStats error', e);
+      if (e is AppException) rethrow;
+      throw NetworkException('Network error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<YearMonthlyStatsResponse> getYearMonthlyStats({String? year}) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConstants.baseUrl}${AppConstants.yearMonthlyStatsEndpoint}${year != null ? '?year=$year' : ''}',
+      );
+
+      final response = await httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      AppLogger.debug(
+          'Year Monthly Stats API Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        AppLogger.debug('API Response Body: $responseBody');
+
+        if (responseBody.isEmpty) {
+          throw ServerException(
+            'Empty response body',
+            statusCode: response.statusCode,
+          );
+        }
+
+        final jsonData = JsonHelper.safeDecode(responseBody);
+        if (jsonData == null) {
+          throw ServerException(
+            'Invalid JSON response',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          return YearMonthlyStatsResponse.fromJson(
+              jsonData['data'] as Map<String, dynamic>);
+        } else {
+          throw ServerException(
+            jsonData['error'] ?? 'Unknown server error',
+            statusCode: response.statusCode,
+            errorCode: jsonData['code'],
+          );
+        }
+      } else {
+        throw NetworkException(
+          'Failed to fetch year monthly stats',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.error('getYearMonthlyStats error', e);
       if (e is AppException) rethrow;
       throw NetworkException('Network error: ${e.toString()}');
     }

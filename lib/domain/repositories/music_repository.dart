@@ -2,6 +2,7 @@ import '../entities/now_playing_info.dart';
 import '../entities/music_report.dart';
 import '../entities/server_stats.dart';
 import '../entities/recent_track_info.dart';
+import '../entities/stats_response.dart';
 import '../entities/user_stats.dart';
 import '../../core/errors/failure.dart';
 
@@ -10,7 +11,7 @@ abstract class MusicRepository {
   Future<Either<Failure, NowPlayingInfo>> getNowPlaying();
 
   // Reports
-  Future<Either<Failure, MusicReport>> getReport(String period);
+  Future<Either<Failure, MusicReport>> getReport(String period, {String? date});
 
   // Recent Tracks
   Future<Either<Failure, RecentTracksResponse>> getRecentTracks({
@@ -25,6 +26,14 @@ abstract class MusicRepository {
 
   // User Stats
   Future<Either<Failure, UserStats>> getUserStats();
+
+  // Detailed Stats
+  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats(
+      {String? date});
+  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats(
+      {String? date});
+  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats(
+      {String? year});
 
   // Health Check
   Future<Either<Failure, HealthCheckResponse>> getHealthCheck();

@@ -13,7 +13,13 @@ class NetworkException extends AppException {
 }
 
 class ServerException extends AppException {
-  const ServerException(super.message, {super.statusCode});
+  final String? errorCode;
+
+  const ServerException(super.message, {super.statusCode, this.errorCode});
+
+  @override
+  String toString() =>
+      'ServerException: $message${errorCode != null ? ' (Code: $errorCode)' : ''}';
 }
 
 class CacheException extends AppException {
