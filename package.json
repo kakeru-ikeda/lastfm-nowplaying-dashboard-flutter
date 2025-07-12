@@ -5,15 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "flutter run -d chrome --web-port 8000 --web-renderer html",
     "clean": "flutter clean",
     "deps": "flutter pub get",
     "generate": "dart run build_runner build --delete-conflicting-outputs",
-    "build": "npm run clean && npm run deps && npm run generate && flutter build web --no-tree-shake-icons",
-    "build:serve": "./start.sh",
+    "build:http": "./start.sh",
     "build:https": "./start.sh https",
-    "cert:create": "mkcert localhost 127.0.0.1 ::1 192.168.40.99",
-    "cert:install": "mkcert -install",
     "env:setup": "cp .env.example .env && echo '✅ .envファイルを作成しました。必要に応じて編集してください。'"
   },
   "dependencies": {
