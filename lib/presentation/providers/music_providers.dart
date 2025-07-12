@@ -69,21 +69,6 @@ final defaultRecentTracksProvider = FutureProvider<RecentTracksResponse>((
   }, (recentTracks) => recentTracks);
 });
 
-// Music Report Provider
-final musicReportProvider = FutureProvider.family<MusicReport, String>((
-  ref,
-  period,
-) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  final selectedDate = ref.watch(reportDateProvider);
-  final result = await repository.getReport(period, date: selectedDate);
-
-  return result.fold((failure) {
-    AppLogger.error('Failed to get report: ${failure.message}');
-    throw Exception(failure.message);
-  }, (report) => report);
-});
-
 final serverStatsProvider = FutureProvider<ServerStats>((ref) async {
   final repository = ref.watch(musicRepositoryProvider);
   final result = await repository.getServerStats();
@@ -156,9 +141,8 @@ final yearMonthlyStatsProvider =
 // レポート日付プロバイダー
 final reportDateProvider = StateProvider<String?>((ref) => null);
 
-// 最適化されたレポートプロバイダー - 依存関係を明示的に分離
-final optimizedMusicReportProvider =
-    FutureProvider.family<MusicReport, String>((
+// レポートプロバイダー
+final musicReportProvider = FutureProvider.family<MusicReport, String>((
   ref,
   period,
 ) async {
@@ -487,7 +471,7 @@ final delayedReportUpdateProvider = FutureProvider.family<void, String>((
     await Future.delayed(const Duration(milliseconds: 100));
 
     // レポートプロバイダーのみを無効化（グラフデータは再利用）
-    ref.invalidate(optimizedMusicReportProvider(period));
+    ref.invalidate(musicReportProvider(period));
 
     // グラフポイントタッチによる日付変更では、グラフデータのキャッシュIDは更新しない
     // こうすることでグラフデータの不要なリロードを防止する

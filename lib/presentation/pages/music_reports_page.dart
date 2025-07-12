@@ -49,8 +49,6 @@ class MusicReportsPage extends ConsumerWidget {
 
                           // プロバイダーを無効化
                           ref.invalidate(musicReportProvider(selectedPeriod));
-                          ref.invalidate(
-                              optimizedMusicReportProvider(selectedPeriod));
 
                           // チャートデータのキャッシュIDを更新して強制的に再フェッチ
                           final currentCacheId =
@@ -62,8 +60,7 @@ class MusicReportsPage extends ConsumerWidget {
                           try {
                             // レポートデータの取得を待つ
                             await ref.read(
-                                optimizedMusicReportProvider(selectedPeriod)
-                                    .future);
+                                musicReportProvider(selectedPeriod).future);
 
                             // キャッシュからグラフデータを同期的に取得（APIリクエストなし）
                             final cacheKey =
@@ -113,8 +110,6 @@ class MusicReportsPage extends ConsumerWidget {
 
                         // プロバイダーを無効化
                         ref.invalidate(musicReportProvider(selectedPeriod));
-                        ref.invalidate(
-                            optimizedMusicReportProvider(selectedPeriod));
 
                         // チャートデータのキャッシュIDを更新して強制的に再フェッチ
                         final currentCacheId =
@@ -125,9 +120,8 @@ class MusicReportsPage extends ConsumerWidget {
                         // レポートデータの取得のみ待つ（グラフデータはキャッシュIDによって制御済み）
                         try {
                           // レポートデータの取得を待つ
-                          await ref.read(
-                              optimizedMusicReportProvider(selectedPeriod)
-                                  .future);
+                          await ref
+                              .read(musicReportProvider(selectedPeriod).future);
 
                           // キャッシュからグラフデータを同期的に取得（APIリクエストなし）
                           final cacheKey =

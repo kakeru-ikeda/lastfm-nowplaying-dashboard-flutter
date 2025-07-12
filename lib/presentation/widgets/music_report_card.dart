@@ -14,7 +14,7 @@ class MusicReportCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPeriod = ref.watch(selectedPeriodProvider);
-    final reportAsync = ref.watch(optimizedMusicReportProvider(selectedPeriod));
+    final reportAsync = ref.watch(musicReportProvider(selectedPeriod));
     final selectedDate = ref.watch(reportDateProvider);
 
     // 遅延更新プロバイダーを監視して、必要に応じてレポートを更新
@@ -24,7 +24,7 @@ class MusicReportCard extends ConsumerWidget {
         next.whenOrNull(
           data: (_) {
             // 遅延更新が完了したらレポートを再取得
-            ref.invalidate(optimizedMusicReportProvider(selectedPeriod));
+            ref.invalidate(musicReportProvider(selectedPeriod));
           },
         );
       },
@@ -64,7 +64,7 @@ class MusicReportCard extends ConsumerWidget {
               deleteIcon: const Icon(Icons.close, size: 18),
               onDeleted: () {
                 ref.read(reportDateProvider.notifier).state = null;
-                ref.invalidate(optimizedMusicReportProvider(selectedPeriod));
+                ref.invalidate(musicReportProvider(selectedPeriod));
               },
               backgroundColor:
                   Theme.of(context).colorScheme.primary.withOpacity(0.1),
