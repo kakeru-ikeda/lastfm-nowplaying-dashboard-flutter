@@ -108,8 +108,7 @@ class MusicReportCard extends ConsumerWidget {
 class _IndependentStatsChartSection extends ConsumerWidget {
   final String period;
 
-  const _IndependentStatsChartSection({required this.period, Key? key})
-      : super(key: key);
+  const _IndependentStatsChartSection({required this.period});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
