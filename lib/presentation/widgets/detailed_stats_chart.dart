@@ -137,6 +137,7 @@ class _StableWeekDailyChartState extends ConsumerState<_StableWeekDailyChart> {
                       interval: 1,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
+                        // データポイントがある場合のみラベルを表示
                         if (index >= 0 && index < stats.stats.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -341,8 +342,10 @@ class _StableMonthWeeklyChartState
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
+                        // データポイントがある場合のみラベルを表示
                         if (index >= 0 && index < stats.stats.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -354,7 +357,7 @@ class _StableMonthWeeklyChartState
                                     .bodySmall
                                     ?.color
                                     ?.withOpacity(0.7),
-                                fontSize: 12,
+                                fontSize: 10,
                               ),
                             ),
                           );
@@ -540,8 +543,10 @@ class _StableYearMonthlyChartState
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
+                        // データポイントがある場合のみラベルを表示
                         if (index >= 0 && index < stats.stats.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -553,7 +558,7 @@ class _StableYearMonthlyChartState
                                     .bodySmall
                                     ?.color
                                     ?.withOpacity(0.7),
-                                fontSize: 12,
+                                fontSize: 10,
                               ),
                             ),
                           );
