@@ -22,7 +22,7 @@ class MusicReportsPage extends ConsumerWidget {
           if (selectedDate != null)
             IconButton(
               icon: const Icon(Icons.calendar_today),
-              tooltip: '基準日をリセット',
+              tooltip: '選択日をリセット',
               onPressed: () {
                 ref.read(reportDateProvider.notifier).state = null;
                 final selectedPeriod = ref.read(selectedPeriodProvider);

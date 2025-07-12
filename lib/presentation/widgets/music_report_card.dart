@@ -33,13 +33,34 @@ class MusicReportCard extends ConsumerWidget {
     // 選択された日付があれば表示
     Widget? dateChip;
     if (selectedDate != null) {
+      // 選択された期間に応じたフォーマット
+      String dateLabel;
+      switch (selectedPeriod) {
+        case 'daily':
+          // 日次レポートの場合は年月日形式
+          final date = DateTime.parse(selectedDate);
+          dateLabel = '${date.year}/${date.month}/${date.day}';
+          break;
+        case 'weekly':
+          // 週次レポートの場合は期間表示
+          dateLabel = selectedDate; // すでに適切な形式
+          break;
+        case 'monthly':
+          // 月次レポートの場合は年月形式
+          final parts = selectedDate.split('-');
+          dateLabel = '${parts[0]}/${parts[1]}';
+          break;
+        default:
+          dateLabel = selectedDate;
+      }
+
       dateChip = Padding(
         padding: const EdgeInsets.only(bottom: 8.0),
         child: Wrap(
           alignment: WrapAlignment.start,
           children: [
             Chip(
-              label: Text('基準日: $selectedDate'),
+              label: Text(dateLabel),
               deleteIcon: const Icon(Icons.close, size: 18),
               onDeleted: () {
                 ref.read(reportDateProvider.notifier).state = null;
@@ -129,6 +150,7 @@ class _TopContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: _buildTopTracksSection(context, report.topTracks)),
         const SizedBox(width: AppConstants.defaultPadding),
