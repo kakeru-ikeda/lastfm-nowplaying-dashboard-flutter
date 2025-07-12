@@ -125,7 +125,8 @@ final weekDailyStatsProvider =
     AppLogger.error('Failed to get week daily stats: ${failure.message}');
     throw Exception(failure.message);
   }, (stats) {
-    AppLogger.debug('Week daily stats loaded successfully: ${stats.stats.length} days data');
+    AppLogger.debug(
+        'Week daily stats loaded successfully: ${stats.stats.length} days data');
     return stats;
   });
 });
@@ -154,6 +155,89 @@ final yearMonthlyStatsProvider =
 
 // レポート日付プロバイダー
 final reportDateProvider = StateProvider<String?>((ref) => null);
+
+// 最適化されたレポートプロバイダー - 依存関係を明示的に分離
+final optimizedMusicReportProvider =
+    FutureProvider.family<MusicReport, String>((
+  ref,
+  period,
+) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final selectedDate = ref.watch(reportDateProvider);
+
+  AppLogger.debug('Fetching report for period: $period, date: $selectedDate');
+
+  final result = await repository.getReport(period, date: selectedDate);
+
+  return result.fold((failure) {
+    AppLogger.error('Failed to get report: ${failure.message}');
+    throw Exception(failure.message);
+  }, (report) {
+    AppLogger.debug('Report loaded successfully for period: $period');
+    return report;
+  });
+});
+
+// 統計チャート専用プロバイダー - レポートデータとは独立
+final chartStatsProvider = FutureProvider.family<dynamic, String>((
+  ref,
+  period,
+) async {
+  final selectedDate = ref.watch(reportDateProvider);
+
+  switch (period) {
+    case 'daily':
+      final stats =
+          await ref.watch(weekDailyStatsProvider(selectedDate).future);
+      return stats;
+    case 'weekly':
+      final stats =
+          await ref.watch(monthWeeklyStatsProvider(selectedDate).future);
+      return stats;
+    case 'monthly':
+      final year = selectedDate?.split('-').firstOrNull;
+      final stats = await ref.watch(yearMonthlyStatsProvider(year).future);
+      return stats;
+    default:
+      throw Exception('Unknown period: $period');
+  }
+});
+
+// 独立したチャートデータプロバイダー - レポートプロバイダーとは分離
+final independentChartDataProvider = FutureProvider.family<dynamic, String>((
+  ref,
+  period,
+) async {
+  final repository = ref.watch(musicRepositoryProvider);
+
+  AppLogger.debug('Fetching independent chart data for period: $period');
+
+  switch (period) {
+    case 'daily':
+      // 現在の日付ではなく、常に最新の週間データを取得
+      final result = await repository.getWeekDailyStats(date: null);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (stats) => stats,
+      );
+    case 'weekly':
+      // 現在の日付ではなく、常に最新の月間週別データを取得
+      final result = await repository.getMonthWeeklyStats(date: null);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (stats) => stats,
+      );
+    case 'monthly':
+      // 現在の年ではなく、常に最新の年間月別データを取得
+      final result = await repository.getYearMonthlyStats(year: null);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (stats) => stats,
+      );
+    default:
+      throw Exception('Unknown period: $period');
+  }
+});
 
 // 接続状態とデータを含む統合モデル
 class NowPlayingState {
@@ -286,4 +370,23 @@ final autoRefreshUserStatsProvider = StreamProvider<UserStats>((
       }
     },
   );
+});
+
+// 遅延レポート更新プロバイダー - チャートタップ時の即座の更新を防ぐ
+final delayedReportUpdateProvider = FutureProvider.family<void, String>((
+  ref,
+  period,
+) async {
+  final selectedDate = ref.watch(reportDateProvider);
+
+  if (selectedDate != null) {
+    AppLogger.debug(
+        'Delayed report update for period: $period, date: $selectedDate');
+
+    // 短い遅延を追加してチャートの再描画を防ぐ
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // レポートプロバイダーを無効化
+    ref.invalidate(optimizedMusicReportProvider(period));
+  }
 });

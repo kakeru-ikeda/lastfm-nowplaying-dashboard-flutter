@@ -16,59 +16,71 @@ class DetailedStatsChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedDate = ref.watch(reportDateProvider);
+    // 独立したチャートデータプロバイダーを使用
+    final chartDataAsync = ref.watch(independentChartDataProvider(period));
 
-    switch (period) {
-      case 'daily':
-        // デイリーページでは過去1週間の再生状況を常に表示する
-        // (selectedDateを渡すと、その日1日だけのデータになってしまう)
-        AppLogger.debug('Loading week daily stats with date: $selectedDate');
-        final statsAsync = ref.watch(weekDailyStatsProvider(selectedDate));
-        return statsAsync.when(
-          data: (stats) => _buildWeekDailyChart(context, stats, ref),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) {
-            AppLogger.error('Error loading week daily stats: $error');
-            return Center(child: Text('Error: ${error.toString()}'));
-          },
-        );
-      case 'weekly':
-        final statsAsync = ref.watch(monthWeeklyStatsProvider(selectedDate));
-        return statsAsync.when(
-          data: (stats) => _buildMonthWeeklyChart(context, stats, ref),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) =>
-              Center(child: Text('Error: ${error.toString()}')),
-        );
-      case 'monthly':
-        final year = selectedDate?.split('-').firstOrNull;
-        final statsAsync = ref.watch(yearMonthlyStatsProvider(year));
-        return statsAsync.when(
-          data: (stats) => _buildYearMonthlyChart(context, stats, ref),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) =>
-              Center(child: Text('Error: ${error.toString()}')),
-        );
-      default:
-        return const Center(child: Text('未対応の期間です'));
-    }
+    return chartDataAsync.when(
+      data: (chartData) {
+        switch (period) {
+          case 'daily':
+            return _StableWeekDailyChart(
+              key: ValueKey('stable_weekly_chart_${chartData.hashCode}'),
+              stats: chartData as WeekDailyStatsResponse,
+            );
+          case 'weekly':
+            return _StableMonthWeeklyChart(
+              key: ValueKey('stable_monthly_chart_${chartData.hashCode}'),
+              stats: chartData as MonthWeeklyStatsResponse,
+            );
+          case 'monthly':
+            return _StableYearMonthlyChart(
+              key: ValueKey('stable_yearly_chart_${chartData.hashCode}'),
+              stats: chartData as YearMonthlyStatsResponse,
+            );
+          default:
+            return const Center(child: Text('未対応の期間です'));
+        }
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) {
+        AppLogger.error('Error loading chart data: $error');
+        return Center(child: Text('Chart Error: ${error.toString()}'));
+      },
+    );
   }
+}
 
-  Widget _buildWeekDailyChart(
-      BuildContext context, WeekDailyStatsResponse stats, WidgetRef ref) {
+// 安定したウィークリーチャート - 再描画を防ぐ
+class _StableWeekDailyChart extends ConsumerStatefulWidget {
+  final WeekDailyStatsResponse stats;
+
+  const _StableWeekDailyChart({
+    super.key,
+    required this.stats,
+  });
+
+  @override
+  ConsumerState<_StableWeekDailyChart> createState() =>
+      _StableWeekDailyChartState();
+}
+
+class _StableWeekDailyChartState extends ConsumerState<_StableWeekDailyChart> {
+  @override
+  Widget build(BuildContext context) {
+    final stats = widget.stats;
+
+    // デバッグ情報の出力
+    AppLogger.debug(
+        'Week daily chart data: ${stats.stats.length} days, meta: ${stats.meta.period}');
+
     if (stats.stats.isEmpty) {
       return const Center(child: Text('データがありません'));
-    }
-    
-    // デバッグ情報の出力
-    AppLogger.debug('Week daily chart data: ${stats.stats.length} days, meta: ${stats.meta.period}');
-    for (var item in stats.stats) {
-      AppLogger.debug('Day: ${item.date}, Label: ${item.label}, Scrobbles: ${item.scrobbles}');
     }
 
     // データ数が7日間ではない場合のログ
     if (stats.stats.length != 7) {
-      AppLogger.warning('Expected 7 days of data but got ${stats.stats.length} days');
+      AppLogger.warning(
+          'Expected 7 days of data but got ${stats.stats.length} days');
     }
 
     return SizedBox(
@@ -185,10 +197,8 @@ class DetailedStatsChart extends ConsumerWidget {
                 lineBarsData: [
                   LineChartBarData(
                     spots: stats.stats.asMap().entries.map((entry) {
-                      // 週間データのスポット位置とスコロブルカウントをマッピング
                       final dayIndex = entry.key.toDouble();
                       final scrobbles = entry.value.scrobbles.toDouble();
-                      AppLogger.debug('Plotting point at day ${entry.value.label}: $scrobbles scrobbles');
                       return FlSpot(dayIndex, scrobbles);
                     }).toList(),
                     isCurved: true,
@@ -242,12 +252,14 @@ class DetailedStatsChart extends ConsumerWidget {
                           touchResponse.lineBarSpots!.first.spotIndex;
                       if (spotIndex >= 0 && spotIndex < stats.stats.length) {
                         final date = stats.stats[spotIndex].date;
-                        AppLogger.debug('Tapped on day at index $spotIndex with date: $date');
-                        // 日付を設定してデイリーレポートを更新
+                        AppLogger.debug(
+                            'Tapped on day at index $spotIndex with date: $date');
+
+                        // 日付を設定するが、即座にレポートを更新しない
                         ref.read(reportDateProvider.notifier).state = date;
-                        ref.invalidate(musicReportProvider('daily'));
-                        // 週間日次統計も更新 (選択した日を基準にした週間データを取得)
-                        ref.invalidate(weekDailyStatsProvider(date));
+
+                        // 遅延更新プロバイダーを使用してレポートを更新
+                        ref.read(delayedReportUpdateProvider('daily'));
                       }
                     }
                   },
@@ -259,9 +271,28 @@ class DetailedStatsChart extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildMonthWeeklyChart(
-      BuildContext context, MonthWeeklyStatsResponse stats, WidgetRef ref) {
+// 安定したマンスリーウィークリーチャート
+class _StableMonthWeeklyChart extends ConsumerStatefulWidget {
+  final MonthWeeklyStatsResponse stats;
+
+  const _StableMonthWeeklyChart({
+    super.key,
+    required this.stats,
+  });
+
+  @override
+  ConsumerState<_StableMonthWeeklyChart> createState() =>
+      _StableMonthWeeklyChartState();
+}
+
+class _StableMonthWeeklyChartState
+    extends ConsumerState<_StableMonthWeeklyChart> {
+  @override
+  Widget build(BuildContext context) {
+    final stats = widget.stats;
+
     if (stats.stats.isEmpty) {
       return const Center(child: Text('データがありません'));
     }
@@ -427,7 +458,7 @@ class DetailedStatsChart extends ConsumerWidget {
                       if (spotIndex >= 0 && spotIndex < stats.stats.length) {
                         final startDate = stats.stats[spotIndex].startDate;
                         ref.read(reportDateProvider.notifier).state = startDate;
-                        ref.invalidate(musicReportProvider('weekly'));
+                        ref.read(delayedReportUpdateProvider('weekly'));
                       }
                     }
                   },
@@ -439,9 +470,28 @@ class DetailedStatsChart extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildYearMonthlyChart(
-      BuildContext context, YearMonthlyStatsResponse stats, WidgetRef ref) {
+// 安定したイヤリーマンスリーチャート
+class _StableYearMonthlyChart extends ConsumerStatefulWidget {
+  final YearMonthlyStatsResponse stats;
+
+  const _StableYearMonthlyChart({
+    super.key,
+    required this.stats,
+  });
+
+  @override
+  ConsumerState<_StableYearMonthlyChart> createState() =>
+      _StableYearMonthlyChartState();
+}
+
+class _StableYearMonthlyChartState
+    extends ConsumerState<_StableYearMonthlyChart> {
+  @override
+  Widget build(BuildContext context) {
+    final stats = widget.stats;
+
     if (stats.stats.isEmpty) {
       return const Center(child: Text('データがありません'));
     }
@@ -609,7 +659,7 @@ class DetailedStatsChart extends ConsumerWidget {
                         final date =
                             '${item.year}-${item.month.toString().padLeft(2, '0')}-01';
                         ref.read(reportDateProvider.notifier).state = date;
-                        ref.invalidate(musicReportProvider('monthly'));
+                        ref.read(delayedReportUpdateProvider('monthly'));
                       }
                     }
                   },
