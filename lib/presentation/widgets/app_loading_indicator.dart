@@ -106,6 +106,20 @@ class ReportLoadingIndicator extends StatelessWidget {
   }
 }
 
+/// 詳細統計チャート用のローディング
+class DetailedStatsLoadingIndicator extends StatelessWidget {
+  const DetailedStatsLoadingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppLoadingIndicator(
+      size: 30.0,
+      text: 'Loading chart data...',
+      height: 200,
+    );
+  }
+}
+
 /// CachedNetworkImage用の小さなローディング
 class ImageLoadingIndicator extends StatelessWidget {
   const ImageLoadingIndicator({super.key});

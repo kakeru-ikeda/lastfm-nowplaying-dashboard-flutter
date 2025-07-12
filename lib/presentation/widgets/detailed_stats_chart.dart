@@ -5,6 +5,7 @@ import '../../domain/entities/stats_response.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/helpers.dart';
+import 'app_loading_indicator.dart';
 
 class DetailedStatsChart extends ConsumerWidget {
   final String period;
@@ -41,7 +42,7 @@ class DetailedStatsChart extends ConsumerWidget {
             return const Center(child: Text('未対応の期間です'));
         }
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const DetailedStatsLoadingIndicator(),
       error: (error, _) {
         AppLogger.error('Error loading chart data: $error');
         return Center(child: Text('Chart Error: ${error.toString()}'));
