@@ -17,8 +17,21 @@ class DetailedStatsChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 独立したチャートデータプロバイダーを使用
-    final chartDataAsync = ref.watch(independentChartDataProvider(period));
+    // リフレッシュ状態のみを監視（キャッシュIDはリフレッシュボタンでのみ変更される）
+    final isRefreshing = ref.watch(isRefreshingProvider(period));
+
+    // リフレッシュ中の場合は明示的にローディングインジケータを表示
+    if (isRefreshing) {
+      return const DetailedStatsLoadingIndicator();
+    }
+
+    // キャッシュを活用した効率的なデータ読み込み
+    // .selectでプロバイダーの状態変更のみを監視し、日付変更では再描画しない
+    final chartDataAsync =
+        ref.watch(independentChartDataProvider(period).select((value) {
+      // データの変更のみを監視（日付変更で再描画しない）
+      return value;
+    }));
 
     return chartDataAsync.when(
       data: (chartData) {

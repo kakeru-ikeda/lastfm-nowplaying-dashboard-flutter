@@ -89,10 +89,22 @@ class MusicReportCard extends ConsumerWidget {
           const SizedBox(height: AppConstants.defaultPadding * 2),
 
           // レポートコンテンツ
-          reportAsync.when(
-            data: (report) => _TopContentSection(report: report),
-            loading: () => const ReportLoadingIndicator(),
-            error: (error, stack) => _buildErrorContent(error),
+          Consumer(
+            builder: (context, ref, child) {
+              final isRefreshing =
+                  ref.watch(isRefreshingProvider(selectedPeriod));
+
+              // リフレッシュ中の場合は明示的にローディングインジケータを表示
+              if (isRefreshing) {
+                return const ReportLoadingIndicator();
+              }
+
+              return reportAsync.when(
+                data: (report) => _TopContentSection(report: report),
+                loading: () => const ReportLoadingIndicator(),
+                error: (error, stack) => _buildErrorContent(error),
+              );
+            },
           ),
         ],
       ),
@@ -133,9 +145,12 @@ class _IndependentStatsChartSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // レポートの日付選択とは独立してチャートを表示
+    // キャッシュIDを監視（リフレッシュ時に更新される）
+    final cacheId = ref.watch(chartDataCacheIdProvider);
+
+    // キャッシュIDに基づいてキーを割り当て、データが更新されたときだけ再構築されるようにする
     return DetailedStatsChart(
-      key: ValueKey('independent_chart_$period'),
+      key: ValueKey('independent_chart_${period}_${cacheId}'),
       period: period,
     );
   }

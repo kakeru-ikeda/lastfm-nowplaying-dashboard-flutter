@@ -4,6 +4,7 @@ import '../widgets/music_report_card.dart';
 import '../widgets/period_selector.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/helpers.dart';
 
 class MusicReportsPage extends ConsumerWidget {
   const MusicReportsPage({super.key});
@@ -20,20 +21,135 @@ class MusicReportsPage extends ConsumerWidget {
         actions: [
           // 日付リセットボタン (選択されている場合のみ表示)
           if (selectedDate != null)
-            IconButton(
-              icon: const Icon(Icons.calendar_today),
-              tooltip: '選択日をリセット',
-              onPressed: () {
-                ref.read(reportDateProvider.notifier).state = null;
-                final selectedPeriod = ref.read(selectedPeriodProvider);
-                ref.invalidate(musicReportProvider(selectedPeriod));
+            Consumer(
+              builder: (context, ref, _) {
+                final selectedPeriod = ref.watch(selectedPeriodProvider);
+                final isRefreshing =
+                    ref.watch(isRefreshingProvider(selectedPeriod));
+
+                return IconButton(
+                  icon: isRefreshing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.0))
+                      : const Icon(Icons.calendar_today),
+                  tooltip: '選択日をリセット',
+                  onPressed: isRefreshing
+                      ? null
+                      : () async {
+                          // リフレッシュ状態を更新
+                          ref
+                              .read(
+                                  isRefreshingProvider(selectedPeriod).notifier)
+                              .state = true;
+
+                          // 日付をリセット
+                          ref.read(reportDateProvider.notifier).state = null;
+
+                          // プロバイダーを無効化
+                          ref.invalidate(musicReportProvider(selectedPeriod));
+                          ref.invalidate(
+                              optimizedMusicReportProvider(selectedPeriod));
+
+                          // チャートデータのキャッシュIDを更新して強制的に再フェッチ
+                          final currentCacheId =
+                              ref.read(chartDataCacheIdProvider);
+                          ref.read(chartDataCacheIdProvider.notifier).state =
+                              currentCacheId + 1;
+
+                          // レポートデータの取得のみ待つ（グラフデータはキャッシュIDによって制御済み）
+                          try {
+                            // レポートデータの取得を待つ
+                            await ref.read(
+                                optimizedMusicReportProvider(selectedPeriod)
+                                    .future);
+
+                            // キャッシュからグラフデータを同期的に取得（APIリクエストなし）
+                            final cacheKey =
+                                '$selectedPeriod-${ref.read(chartDataCacheIdProvider)}';
+                            final cache = ref.read(chartDataCacheProvider);
+                            if (cache.containsKey(cacheKey)) {
+                              AppLogger.debug(
+                                  'カレンダーリセット完了: レポートを更新し、グラフはキャッシュを使用');
+                            } else {
+                              AppLogger.debug(
+                                  'カレンダーリセット完了: レポートを更新し、グラフは次回の表示で更新');
+                            }
+                          } catch (e) {
+                            AppLogger.error('カレンダーリセットエラー: $e');
+                            // エラーが発生した場合も処理を続行
+                          } finally {
+                            // 処理が完了したらリフレッシュ状態を元に戻す
+                            ref
+                                .read(isRefreshingProvider(selectedPeriod)
+                                    .notifier)
+                                .state = false;
+                          }
+                        },
+                );
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              final selectedPeriod = ref.read(selectedPeriodProvider);
-              ref.invalidate(musicReportProvider(selectedPeriod));
+          Consumer(
+            builder: (context, ref, _) {
+              final selectedPeriod = ref.watch(selectedPeriodProvider);
+              final isRefreshing =
+                  ref.watch(isRefreshingProvider(selectedPeriod));
+
+              return IconButton(
+                icon: isRefreshing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.0))
+                    : const Icon(Icons.refresh),
+                onPressed: isRefreshing
+                    ? null
+                    : () async {
+                        // リフレッシュ状態を更新
+                        ref
+                            .read(isRefreshingProvider(selectedPeriod).notifier)
+                            .state = true;
+
+                        // プロバイダーを無効化
+                        ref.invalidate(musicReportProvider(selectedPeriod));
+                        ref.invalidate(
+                            optimizedMusicReportProvider(selectedPeriod));
+
+                        // チャートデータのキャッシュIDを更新して強制的に再フェッチ
+                        final currentCacheId =
+                            ref.read(chartDataCacheIdProvider);
+                        ref.read(chartDataCacheIdProvider.notifier).state =
+                            currentCacheId + 1;
+
+                        // レポートデータの取得のみ待つ（グラフデータはキャッシュIDによって制御済み）
+                        try {
+                          // レポートデータの取得を待つ
+                          await ref.read(
+                              optimizedMusicReportProvider(selectedPeriod)
+                                  .future);
+
+                          // キャッシュからグラフデータを同期的に取得（APIリクエストなし）
+                          final cacheKey =
+                              '$selectedPeriod-${ref.read(chartDataCacheIdProvider)}';
+                          final cache = ref.read(chartDataCacheProvider);
+                          if (cache.containsKey(cacheKey)) {
+                            AppLogger.debug('リフレッシュ完了: レポートを更新し、グラフはキャッシュを使用');
+                          } else {
+                            AppLogger.debug('リフレッシュ完了: レポートを更新し、グラフは次回の表示で更新');
+                          }
+                        } catch (e) {
+                          AppLogger.error('リフレッシュエラー: $e');
+                          // エラーが発生した場合も処理を続行
+                        } finally {
+                          // 処理が完了したらリフレッシュ状態を元に戻す
+                          ref
+                              .read(
+                                  isRefreshingProvider(selectedPeriod).notifier)
+                              .state = false;
+                        }
+                      },
+              );
             },
           ),
           const SizedBox(width: AppConstants.defaultPadding),
