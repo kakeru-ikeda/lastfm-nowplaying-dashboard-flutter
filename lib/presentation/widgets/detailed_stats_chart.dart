@@ -39,7 +39,7 @@ class DetailedStatsChart extends ConsumerWidget {
               stats: chartData as YearMonthlyStatsResponse,
             );
           default:
-            return const Center(child: Text('未対応の期間です'));
+            return const Center(child: Text('Unsupported period'));
         }
       },
       loading: () => const DetailedStatsLoadingIndicator(),
@@ -75,7 +75,7 @@ class _StableWeekDailyChartState extends ConsumerState<_StableWeekDailyChart> {
         'Week daily chart data: ${stats.stats.length} days, meta: ${stats.meta.period}');
 
     if (stats.stats.isEmpty) {
-      return const Center(child: Text('データがありません'));
+      return const Center(child: Text('No data available'));
     }
 
     // データ数が7日間ではない場合のログ
@@ -90,14 +90,14 @@ class _StableWeekDailyChartState extends ConsumerState<_StableWeekDailyChart> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Listening Activity (週間日別統計)',
+            'Listening Activity (Daily)',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
-            '過去7日間の再生状況 - タップでその日を基準とした日次レポートを表示',
+            'Last 7 days - Tap on a day to view detailed report',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color:
                     Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
@@ -296,7 +296,7 @@ class _StableMonthWeeklyChartState
     final stats = widget.stats;
 
     if (stats.stats.isEmpty) {
-      return const Center(child: Text('データがありません'));
+      return const Center(child: Text('No data available'));
     }
 
     return SizedBox(
@@ -305,14 +305,14 @@ class _StableMonthWeeklyChartState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Listening Activity (月間週別統計)',
+            'Listening Activity (Weekly)',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
-            'タップでその週を基準とした週次レポートを表示',
+            'Tap on a week to view detailed weekly report',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color:
                     Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
@@ -497,7 +497,7 @@ class _StableYearMonthlyChartState
     final stats = widget.stats;
 
     if (stats.stats.isEmpty) {
-      return const Center(child: Text('データがありません'));
+      return const Center(child: Text('No data available'));
     }
 
     return SizedBox(
@@ -506,14 +506,14 @@ class _StableYearMonthlyChartState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Listening Activity (年間月別統計)',
+            'Listening Activity (Monthly)',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
-            'タップでその月を基準とした月次レポートを表示',
+            'Tap on a month to view detailed monthly report',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color:
                     Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
