@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import 'section_card.dart';
 import 'clickable_track_item.dart';
 import 'clickable_artist_item.dart';
 import 'app_loading_indicator.dart';
+import 'detailed_stats_chart.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -15,23 +15,59 @@ class MusicReportCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPeriod = ref.watch(selectedPeriodProvider);
     final reportAsync = ref.watch(musicReportProvider(selectedPeriod));
+    final selectedDate = ref.watch(reportDateProvider);
+
+    // 選択された日付があれば表示
+    Widget? dateChip;
+    if (selectedDate != null) {
+      dateChip = Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Wrap(
+          alignment: WrapAlignment.start,
+          children: [
+            Chip(
+              label: Text('基準日: $selectedDate'),
+              deleteIcon: const Icon(Icons.close, size: 18),
+              onDeleted: () {
+                ref.read(reportDateProvider.notifier).state = null;
+                ref.invalidate(musicReportProvider(selectedPeriod));
+              },
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              deleteIconColor: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
+      );
+    }
 
     return SectionCard(
       icon: Icons.bar_chart,
       title: 'Music Report',
-      child: reportAsync.when(
-        data: (report) => _buildReportContent(context, report),
-        loading: () => const ReportLoadingIndicator(),
-        error: (error, stack) => _buildErrorContent(error),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 選択された日付の表示
+          if (dateChip != null) dateChip,
+
+          // レポートコンテンツ
+          reportAsync.when(
+            data: (report) => _buildReportContent(context, report, ref),
+            loading: () => const ReportLoadingIndicator(),
+            error: (error, stack) => _buildErrorContent(error),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildReportContent(BuildContext context, report) {
+  Widget _buildReportContent(BuildContext context, report, WidgetRef ref) {
+    final selectedPeriod = ref.watch(selectedPeriodProvider);
+
     return Column(
       children: [
-        // Listening Trends Chart
-        _buildListeningChart(context, report.listeningTrends),
+        // 詳細統計チャート
+        DetailedStatsChart(period: selectedPeriod),
         const SizedBox(height: AppConstants.defaultPadding * 2),
 
         // Top Content Sections
@@ -48,217 +84,86 @@ class MusicReportCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildListeningChart(BuildContext context, List<dynamic> trends) {
-    if (trends.isEmpty) return const SizedBox.shrink();
-
-    return SizedBox(
-      height: AppConstants.chartHeight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Listening Activity',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 1,
-                  getDrawingHorizontalLine:
-                      (value) => FlLine(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), strokeWidth: 1),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        final index = value.toInt();
-                        if (index >= 0 && index < trends.length) {
-                          final trend = trends[index];
-                          final date = DateTime.parse(trend.date);
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${date.month}/${date.day}',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      getTitlesWidget: (double value, TitleMeta meta) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border(
-                    bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
-                    left: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
-                  ),
-                ),
-                minX: 0,
-                maxX: trends.length.toDouble() - 1,
-                minY: 0,
-                maxY:
-                    trends
-                        .map<double>((t) => t.scrobbles.toDouble())
-                        .reduce((a, b) => a > b ? a : b) *
-                    1.1,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots:
-                        trends.asMap().entries.map((entry) {
-                          return FlSpot(
-                            entry.key.toDouble(),
-                            entry.value.scrobbles.toDouble(),
-                          );
-                        }).toList(),
-                    isCurved: true,
-                    color: Theme.of(context).colorScheme.secondary,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopTracksSection(BuildContext context, List<dynamic> topTracks) {
+  Widget _buildTopTracksSection(BuildContext context, List<dynamic> tracks) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Top Tracks',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
-        ...topTracks.take(5).map((track) => _buildTrackItem(context, track)),
+        const SizedBox(height: AppConstants.defaultPadding),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tracks.length > 5 ? 5 : tracks.length,
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return ClickableTrackItem(
+              track: track.name,
+              artist: track.artist.name,
+              trailing: Text(
+                '#${index + 1} (${track.playcount} plays)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildTopArtistsSection(
-    BuildContext context,
-    List<dynamic> topArtists,
-  ) {
+  Widget _buildTopArtistsSection(BuildContext context, List<dynamic> artists) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Top Artists',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
-        ...topArtists
-            .take(5)
-            .map((artist) => _buildArtistItem(context, artist)),
+        const SizedBox(height: AppConstants.defaultPadding),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: artists.length > 5 ? 5 : artists.length,
+          itemBuilder: (context, index) {
+            final artist = artists[index];
+            return ClickableArtistItem(
+              artist: artist.name,
+              trailing: Text(
+                '#${index + 1} (${artist.playcount} plays)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildTrackItem(BuildContext context, dynamic track) {
-    final imageUrl = track.image.isNotEmpty ? track.image.last.text : null;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: ClickableTrackItem(
-        artist: track.artist.name,
-        track: track.name,
-        imageUrl: imageUrl?.isNotEmpty == true ? imageUrl : null,
-        trailing: Text(
-          '${track.playcount}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.secondary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        padding: const EdgeInsets.all(0),
-      ),
-    );
-  }
-
-  Widget _buildArtistItem(BuildContext context, dynamic artist) {
-    final imageUrl = artist.image.isNotEmpty ? artist.image.last.text : null;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: ClickableArtistItem(
-        artist: artist.name,
-        imageUrl: imageUrl?.isNotEmpty == true ? imageUrl : null,
-        trailing: Text(
-          '${artist.playcount}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.secondary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        padding: const EdgeInsets.all(0),
-      ),
-    );
-  }
-
-  Widget _buildErrorContent(Object error) {
-    return SizedBox(
-      height: 200,
-      child: Center(
+  Widget _buildErrorContent(dynamic error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Error loading report', style: TextStyle(color: Colors.red)),
+            Text(
+              'レポートの取得に失敗しました',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
             Text(
               error.toString(),
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],

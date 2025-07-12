@@ -10,12 +10,25 @@ class MusicReportsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDate = ref.watch(reportDateProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('🎵 Music Reports'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          // 日付リセットボタン (選択されている場合のみ表示)
+          if (selectedDate != null)
+            IconButton(
+              icon: const Icon(Icons.calendar_today),
+              tooltip: '基準日をリセット',
+              onPressed: () {
+                ref.read(reportDateProvider.notifier).state = null;
+                final selectedPeriod = ref.read(selectedPeriodProvider);
+                ref.invalidate(musicReportProvider(selectedPeriod));
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {

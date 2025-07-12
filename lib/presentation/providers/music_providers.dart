@@ -6,6 +6,7 @@ import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
 import '../../domain/entities/recent_tracks_params.dart';
 import '../../domain/entities/user_stats.dart';
+import '../../domain/entities/stats_response.dart';
 import '../../domain/repositories/music_repository.dart';
 import '../../data/datasources/music_remote_data_source.dart';
 import '../../data/repositories/music_repository_impl.dart';
@@ -38,22 +39,22 @@ final nowPlayingProvider = FutureProvider<NowPlayingInfo>((ref) async {
 // Recent Tracks Provider with parameters
 final recentTracksProvider =
     FutureProvider.family<RecentTracksResponse, RecentTracksParams>((
-      ref,
-      params,
-    ) async {
-      final repository = ref.watch(musicRepositoryProvider);
-      final result = await repository.getRecentTracks(
-        limit: params.limit,
-        page: params.page,
-        from: params.from,
-        to: params.to,
-      );
+  ref,
+  params,
+) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final result = await repository.getRecentTracks(
+    limit: params.limit,
+    page: params.page,
+    from: params.from,
+    to: params.to,
+  );
 
-      return result.fold((failure) {
-        AppLogger.error('Failed to get recent tracks: ${failure.message}');
-        throw Exception(failure.message);
-      }, (recentTracks) => recentTracks);
-    });
+  return result.fold((failure) {
+    AppLogger.error('Failed to get recent tracks: ${failure.message}');
+    throw Exception(failure.message);
+  }, (recentTracks) => recentTracks);
+});
 
 // Simple recent tracks provider with default parameters
 final defaultRecentTracksProvider = FutureProvider<RecentTracksResponse>((
@@ -74,7 +75,8 @@ final musicReportProvider = FutureProvider.family<MusicReport, String>((
   period,
 ) async {
   final repository = ref.watch(musicRepositoryProvider);
-  final result = await repository.getReport(period);
+  final selectedDate = ref.watch(reportDateProvider);
+  final result = await repository.getReport(period, date: selectedDate);
 
   return result.fold((failure) {
     AppLogger.error('Failed to get report: ${failure.message}');
@@ -112,6 +114,46 @@ final userStatsProvider = FutureProvider<UserStats>((ref) async {
     throw Exception(failure.message);
   }, (userStats) => userStats);
 });
+
+// 詳細統計プロバイダー
+final weekDailyStatsProvider =
+    FutureProvider.family<WeekDailyStatsResponse, String?>((ref, date) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final result = await repository.getWeekDailyStats(date: date);
+
+  return result.fold((failure) {
+    AppLogger.error('Failed to get week daily stats: ${failure.message}');
+    throw Exception(failure.message);
+  }, (stats) {
+    AppLogger.debug('Week daily stats loaded successfully: ${stats.stats.length} days data');
+    return stats;
+  });
+});
+
+final monthWeeklyStatsProvider =
+    FutureProvider.family<MonthWeeklyStatsResponse, String?>((ref, date) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final result = await repository.getMonthWeeklyStats(date: date);
+
+  return result.fold((failure) {
+    AppLogger.error('Failed to get month weekly stats: ${failure.message}');
+    throw Exception(failure.message);
+  }, (stats) => stats);
+});
+
+final yearMonthlyStatsProvider =
+    FutureProvider.family<YearMonthlyStatsResponse, String?>((ref, year) async {
+  final repository = ref.watch(musicRepositoryProvider);
+  final result = await repository.getYearMonthlyStats(year: year);
+
+  return result.fold((failure) {
+    AppLogger.error('Failed to get year monthly stats: ${failure.message}');
+    throw Exception(failure.message);
+  }, (stats) => stats);
+});
+
+// レポート日付プロバイダー
+final reportDateProvider = StateProvider<String?>((ref) => null);
 
 // 接続状態とデータを含む統合モデル
 class NowPlayingState {

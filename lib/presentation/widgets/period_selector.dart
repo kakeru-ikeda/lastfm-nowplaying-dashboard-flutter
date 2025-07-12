@@ -64,6 +64,8 @@ class PeriodSelector extends ConsumerWidget {
       duration: AppConstants.defaultAnimationDuration,
       child: ElevatedButton.icon(
         onPressed: () {
+          // 期間切替時に選択日付をリセット
+          ref.read(reportDateProvider.notifier).state = null;
           ref.read(selectedPeriodProvider.notifier).state = key;
         },
         icon: Icon(
