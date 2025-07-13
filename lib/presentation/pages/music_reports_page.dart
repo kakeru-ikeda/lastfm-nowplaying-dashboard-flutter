@@ -5,6 +5,7 @@ import '../widgets/period_selector.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/helpers.dart';
+import '../../core/utils/responsive_helper.dart';
 
 class MusicReportsPage extends ConsumerWidget {
   const MusicReportsPage({super.key});
@@ -150,13 +151,13 @@ class MusicReportsPage extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        padding: ResponsiveHelper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Period Selector
             const PeriodSelector(),
-            const SizedBox(height: AppConstants.defaultPadding),
+            SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
 
             // Music Report
             const MusicReportCard(),

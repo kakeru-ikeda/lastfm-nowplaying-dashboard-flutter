@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/responsive_helper.dart';
 import 'section_card.dart';
 import 'clickable_track_item.dart';
 import 'clickable_artist_item.dart';
@@ -164,16 +165,28 @@ class _TopContentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _buildTopTracksSection(context, report.topTracks)),
-        const SizedBox(width: AppConstants.defaultPadding),
-        Expanded(
-          child: _buildTopArtistsSection(context, report.topArtists),
-        ),
-      ],
-    );
+    // レスポンシブ対応: モバイル・タブレットでは縦並び、デスクトップでは横並び
+    if (ResponsiveHelper.isMobile(context) || ResponsiveHelper.isTablet(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTopTracksSection(context, report.topTracks),
+          const SizedBox(height: AppConstants.defaultPadding * 2),
+          _buildTopArtistsSection(context, report.topArtists),
+        ],
+      );
+    } else {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildTopTracksSection(context, report.topTracks)),
+          const SizedBox(width: AppConstants.defaultPadding),
+          Expanded(
+            child: _buildTopArtistsSection(context, report.topArtists),
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildTopTracksSection(BuildContext context, List<dynamic> tracks) {

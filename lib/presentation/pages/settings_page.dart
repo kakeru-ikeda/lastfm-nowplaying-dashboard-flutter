@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_providers.dart';
 import '../../domain/entities/theme_settings.dart';
+import '../../core/utils/responsive_helper.dart';
 import '../widgets/section_card.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -18,35 +19,38 @@ class SettingsPage extends ConsumerWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveHelper.getResponsivePadding(context),
         child: Column(
           children: [
             // テーマモード設定
             SectionCard(
               icon: Icons.palette,
               title: 'テーマモード',
-              child: _buildThemeModeSection(context, themeSettings, themeNotifier),
+              child:
+                  _buildThemeModeSection(context, themeSettings, themeNotifier),
             ),
             const SizedBox(height: 16),
-            
+
             // カラーテーマ設定
             SectionCard(
               icon: Icons.color_lens,
               title: 'カラーテーマ',
-              child: _buildColorThemeSection(context, themeSettings, themeNotifier),
+              child: _buildColorThemeSection(
+                  context, themeSettings, themeNotifier),
             ),
             const SizedBox(height: 16),
-            
+
             // カスタムカラー設定（カスタムテーマ選択時のみ表示）
             if (themeSettings.colorTheme == ColorThemePreset.custom)
               SectionCard(
                 icon: Icons.tune,
                 title: 'カスタムカラー',
-                child: _buildCustomColorSection(context, themeSettings, themeNotifier),
+                child: _buildCustomColorSection(
+                    context, themeSettings, themeNotifier),
               ),
-            
+
             const SizedBox(height: 32),
-            
+
             // リセットボタン
             SizedBox(
               width: double.infinity,
@@ -76,7 +80,10 @@ class SettingsPage extends ConsumerWidget {
         return ListTile(
           leading: Icon(_getThemeModeIcon(mode)),
           title: Text(_getThemeModeLabel(mode)),
-          trailing: isSelected ? Icon(Icons.check, color: Theme.of(context).colorScheme.secondary) : null,
+          trailing: isSelected
+              ? Icon(Icons.check,
+                  color: Theme.of(context).colorScheme.secondary)
+              : null,
           onTap: () => notifier.updateThemeMode(mode),
           selected: isSelected,
         );
@@ -98,7 +105,10 @@ class SettingsPage extends ConsumerWidget {
             radius: 12,
           ),
           title: Text(preset.displayName),
-          trailing: isSelected ? Icon(Icons.check, color: Theme.of(context).colorScheme.secondary) : null,
+          trailing: isSelected
+              ? Icon(Icons.check,
+                  color: Theme.of(context).colorScheme.secondary)
+              : null,
           onTap: () => notifier.updateColorTheme(preset),
           selected: isSelected,
         );
@@ -115,7 +125,8 @@ class SettingsPage extends ConsumerWidget {
       children: [
         ListTile(
           leading: CircleAvatar(
-            backgroundColor: settings.customPrimaryColor ?? ColorThemePreset.custom.primaryColorValue,
+            backgroundColor: settings.customPrimaryColor ??
+                ColorThemePreset.custom.primaryColorValue,
             radius: 12,
           ),
           title: const Text('プライマリーカラー'),
@@ -123,13 +134,15 @@ class SettingsPage extends ConsumerWidget {
           onTap: () => _showColorPicker(
             context,
             'プライマリーカラーを選択',
-            settings.customPrimaryColor ?? ColorThemePreset.custom.primaryColorValue,
+            settings.customPrimaryColor ??
+                ColorThemePreset.custom.primaryColorValue,
             (color) => notifier.updateCustomColors(primaryColor: color),
           ),
         ),
         ListTile(
           leading: CircleAvatar(
-            backgroundColor: settings.customAccentColor ?? ColorThemePreset.custom.accentColorValue,
+            backgroundColor: settings.customAccentColor ??
+                ColorThemePreset.custom.accentColorValue,
             radius: 12,
           ),
           title: const Text('アクセントカラー'),
@@ -137,7 +150,8 @@ class SettingsPage extends ConsumerWidget {
           onTap: () => _showColorPicker(
             context,
             'アクセントカラーを選択',
-            settings.customAccentColor ?? ColorThemePreset.custom.accentColorValue,
+            settings.customAccentColor ??
+                ColorThemePreset.custom.accentColorValue,
             (color) => notifier.updateCustomColors(accentColor: color),
           ),
         ),
@@ -230,7 +244,7 @@ class ColorPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = Theme.of(context).colorScheme.secondary;
-    
+
     final colors = [
       Colors.red,
       Colors.pink,
@@ -273,9 +287,7 @@ class ColorPicker extends StatelessWidget {
                     ? Border.all(color: accentColor, width: 3)
                     : null,
               ),
-              child: isSelected
-                  ? Icon(Icons.check, color: accentColor)
-                  : null,
+              child: isSelected ? Icon(Icons.check, color: accentColor) : null,
             ),
           );
         }).toList(),

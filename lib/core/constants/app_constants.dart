@@ -35,6 +35,24 @@ class AppConstants {
   static const double cardBorderRadius = 12.0;
   static const double chartHeight = 300.0;
 
+  // Responsive Design Constants
+  static const double mobileBreakpoint = 450.0;
+  static const double tabletBreakpoint = 800.0;
+  static const double desktopBreakpoint = 1200.0;
+  static const double largeDesktopBreakpoint = 1920.0;
+
+  // Responsive Padding Multipliers
+  static const double mobilePaddingScale = 0.5;
+  static const double tabletPaddingScale = 1.0;
+  static const double desktopPaddingScale = 1.25;
+  static const double largeDesktopPaddingScale = 1.5;
+
+  // Responsive Card Heights
+  static const double mobileCardHeight = 160.0;
+  static const double tabletCardHeight = 180.0;
+  static const double desktopCardHeight = 200.0;
+  static const double largeDesktopCardHeight = 210.0;
+
   // Animations
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
 }

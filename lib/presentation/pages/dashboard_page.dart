@@ -7,6 +7,7 @@ import '../widgets/simple_card.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/responsive_helper.dart';
 import 'music_reports_page.dart';
 import 'settings_page.dart';
 
@@ -64,29 +65,83 @@ class DashboardPage extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            SizedBox(
-              height: 210, // +10px でNowPlayingとUser Statsカードの高さを調整
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: const NowPlayingCard()),
-                  const SizedBox(width: AppConstants.defaultPadding),
-                  Expanded(flex: 1, child: const UserStatsCard()),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-
-            // Recent Tracks Card
-            const RecentTracksSection(),
-          ],
+        padding: ResponsiveHelper.getResponsivePadding(context),
+        child: ResponsiveHelper.responsiveLayout(
+          context: context,
+          mobile: _buildMobileLayout(context, ref),
+          tablet: _buildTabletLayout(context, ref),
+          desktop: _buildDesktopLayout(context, ref),
         ),
       ),
+    );
+  }
+
+  /// モバイルレイアウト - スタック配置でプロフィールカードをRecent tracksの上に
+  Widget _buildMobileLayout(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Now Playing Card（全幅）- モバイルでは動的な高さに調整
+        const NowPlayingCard(),
+        SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+        // User Stats Card（Recent tracksの上に配置）
+        const UserStatsCard(),
+        SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+        // Recent Tracks Card
+        const RecentTracksSection(),
+      ],
+    );
+  }
+
+  /// タブレットレイアウト - アダプティブグリッド
+  Widget _buildTabletLayout(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Row - Now Playing + User Stats
+        SizedBox(
+          height: ResponsiveHelper.getNowPlayingCardHeight(context),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: const NowPlayingCard()),
+              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              Expanded(flex: 2, child: const UserStatsCard()),
+            ],
+          ),
+        ),
+        SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+        // Recent Tracks Card
+        const RecentTracksSection(),
+      ],
+    );
+  }
+
+  /// デスクトップレイアウト - フル横向きレイアウト
+  Widget _buildDesktopLayout(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Row
+        SizedBox(
+          height: ResponsiveHelper.getNowPlayingCardHeight(context),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 2, child: const NowPlayingCard()),
+              SizedBox(width: ResponsiveHelper.getResponsiveSpacing(context)),
+              Expanded(flex: 1, child: const UserStatsCard()),
+            ],
+          ),
+        ),
+        SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
+
+        // Recent Tracks Card
+        const RecentTracksSection(),
+      ],
     );
   }
 }
@@ -99,43 +154,40 @@ class RecentTracksSection extends ConsumerWidget {
     final recentTracksAsync = ref.watch(autoRefreshRecentTracksProvider);
 
     return recentTracksAsync.when(
-      data:
-          (recentTracks) => RecentTracksCard(
-            tracks: recentTracks.tracks,
-            onRefresh: () => ref.invalidate(autoRefreshRecentTracksProvider),
-          ),
-      loading:
-          () => SimpleCard(
-            height: 200,
-            child: const AppLoadingIndicator(
-              height: 200,
-              text: 'Loading recent tracks...',
-            ),
-          ),
-      error:
-          (error, stackTrace) => SimpleCard(
-            height: 200,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    '再生履歴の読み込みに失敗しました\n$error',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed:
-                        () => ref.invalidate(autoRefreshRecentTracksProvider),
-                    child: const Text('再試行'),
-                  ),
-                ],
+      data: (recentTracks) => RecentTracksCard(
+        tracks: recentTracks.tracks,
+        onRefresh: () => ref.invalidate(autoRefreshRecentTracksProvider),
+      ),
+      loading: () => SimpleCard(
+        height: 200,
+        child: const AppLoadingIndicator(
+          height: 200,
+          text: 'Loading recent tracks...',
+        ),
+      ),
+      error: (error, stackTrace) => SimpleCard(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                '再生履歴の読み込みに失敗しました\n$error',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red),
               ),
-            ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () =>
+                    ref.invalidate(autoRefreshRecentTracksProvider),
+                child: const Text('再試行'),
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 }

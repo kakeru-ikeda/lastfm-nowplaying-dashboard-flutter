@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../domain/entities/user_stats.dart';
 import '../../core/utils/url_helper.dart';
+import '../../core/utils/responsive_helper.dart';
 import '../providers/music_providers.dart';
 import 'section_card.dart';
 import 'app_loading_indicator.dart';
@@ -32,15 +33,17 @@ class _UserStatsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // プロフィール情報（コンパクト版）
-        _CompactProfileSection(profile: userStats.profile),
-        const SizedBox(height: 12),
+        _CompactProfileSection(profile: userStats.profile, isMobile: isMobile),
+        SizedBox(height: isMobile ? 8 : 12),
 
-        // 統計情報グリッド
-        _StatsGrid(userStats: userStats),
+        // 統計情報グリッド（モバイルでは縦並び）
+        _StatsGrid(userStats: userStats, isMobile: isMobile),
       ],
     );
   }
@@ -48,13 +51,17 @@ class _UserStatsContent extends StatelessWidget {
 
 class _CompactProfileSection extends StatelessWidget {
   final UserProfile profile;
+  final bool isMobile;
 
-  const _CompactProfileSection({required this.profile});
+  const _CompactProfileSection({required this.profile, this.isMobile = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final imageSize = isMobile ? 32.0 : 40.0;
+    final iconSize = isMobile ? 16.0 : 20.0;
+    final spacing = isMobile ? 8.0 : 10.0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -64,8 +71,8 @@ class _CompactProfileSection extends StatelessWidget {
           children: [
             // プロフィール画像（小・枠なし・クリック可能）
             Container(
-              width: 40,
-              height: 40,
+              width: imageSize,
+              height: imageSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: colorScheme.surfaceVariant,
@@ -77,23 +84,23 @@ class _CompactProfileSection extends StatelessWidget {
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Icon(
                           Icons.person,
-                          size: 20,
+                          size: iconSize,
                           color: colorScheme.onSurfaceVariant,
                         ),
                         errorWidget: (context, url, error) => Icon(
                           Icons.person,
-                          size: 20,
+                          size: iconSize,
                           color: colorScheme.onSurfaceVariant,
                         ),
                       )
                     : Icon(
                         Icons.person,
-                        size: 20,
+                        size: iconSize,
                         color: colorScheme.onSurfaceVariant,
                       ),
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: spacing),
 
             // プロフィール詳細（圧縮版）
             Expanded(
@@ -104,7 +111,7 @@ class _CompactProfileSection extends StatelessWidget {
                   Text(
                     profile.username,
                     style: GoogleFonts.outfit(
-                      fontSize: 14,
+                      fontSize: isMobile ? 12 : 14,
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
                     ),
@@ -117,7 +124,7 @@ class _CompactProfileSection extends StatelessWidget {
                     '${_formatPlayCount(profile.totalPlayCount)} plays',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 11,
+                      fontSize: isMobile ? 10 : 11,
                     ),
                   ),
                 ],
@@ -141,13 +148,15 @@ class _CompactProfileSection extends StatelessWidget {
 
 class _StatsGrid extends StatelessWidget {
   final UserStats userStats;
+  final bool isMobile;
 
-  const _StatsGrid({required this.userStats});
+  const _StatsGrid({required this.userStats, this.isMobile = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final spacing = isMobile ? 6.0 : 8.0;
 
     return Column(
       children: [
@@ -160,10 +169,11 @@ class _StatsGrid extends StatelessWidget {
             value: '${_formatPlayCount(userStats.topArtist!.playCount)} plays',
             color: colorScheme.primary,
             url: userStats.topArtist!.url,
+            isMobile: isMobile,
           ),
 
         if (userStats.topArtist != null && userStats.topTrack != null)
-          const SizedBox(height: 8),
+          SizedBox(height: spacing),
 
         // トップトラック
         if (userStats.topTrack != null)
@@ -175,6 +185,7 @@ class _StatsGrid extends StatelessWidget {
             value: '${_formatPlayCount(userStats.topTrack!.playCount)} plays',
             color: colorScheme.secondary,
             url: userStats.topTrack!.url,
+            isMobile: isMobile,
           ),
       ],
     );
@@ -197,6 +208,7 @@ class _StatItem extends StatelessWidget {
   final String value;
   final Color color;
   final String? url;
+  final bool isMobile;
 
   const _StatItem({
     required this.icon,
@@ -205,19 +217,23 @@ class _StatItem extends StatelessWidget {
     required this.value,
     required this.color,
     this.url,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final padding = isMobile ? 6.0 : 8.0;
+    final iconSize = isMobile ? 12.0 : 14.0;
+    final containerPadding = isMobile ? 4.0 : 6.0;
 
     return MouseRegion(
       cursor: url != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
         onTap: url != null ? () => UrlHelper.openInNewTab(url!) : null,
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
             color: color.withOpacity(0.05),
             borderRadius: BorderRadius.circular(6),
@@ -229,18 +245,18 @@ class _StatItem extends StatelessWidget {
             children: [
               // アイコン
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: EdgeInsets.all(containerPadding),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Icon(
                   icon,
-                  size: 14,
+                  size: iconSize,
                   color: color,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: padding),
 
               // テキスト情報
               Expanded(
@@ -252,14 +268,16 @@ class _StatItem extends StatelessWidget {
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: color,
                         fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 11 : null,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: isMobile ? 1 : 2),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: url != null ? color : colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
+                        fontSize: isMobile ? 10 : null,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -274,6 +292,7 @@ class _StatItem extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
+                  fontSize: isMobile ? 10 : null,
                 ),
               ),
             ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/music_providers.dart';
 import '../../core/utils/url_helper.dart';
+import '../../core/utils/responsive_helper.dart';
 import 'section_card.dart';
 import 'app_loading_indicator.dart';
 
@@ -93,6 +94,10 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
       icon: Icons.music_note,
       title: 'Now Playing',
       trailing: _buildConnectionIndicator(connectionState),
+      // モバイルでは高さを指定しない（内容に応じて動的に調整）
+      height: ResponsiveHelper.isMobile(context)
+          ? null
+          : ResponsiveHelper.getNowPlayingCardHeight(context),
       child: nowPlayingAsync.when(
         data: (nowPlaying) => _buildNowPlayingContent(context, nowPlaying),
         loading: () => const NowPlayingLoadingIndicator(),
@@ -118,19 +123,32 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
             UrlHelper.openInNewTab(url);
           }
         },
-        child: Row(
-          children: [
-            // Album Art
-            Container(
-              width: 120,
-              height: 120,
+        child: ResponsiveHelper.isMobile(context)
+            ? _buildMobileLayout(context, nowPlaying)
+            : _buildDesktopLayout(context, nowPlaying),
+      ),
+    );
+  }
+
+  /// モバイル用の縦向きレイアウト
+  Widget _buildMobileLayout(BuildContext context, nowPlaying) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Album Art（大きく表示）
+          Center(
+            child: Container(
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 color: Colors.grey[800],
               ),
               child: nowPlaying.imageUrl != null
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
                         imageUrl: nowPlaying.imageUrl!,
                         fit: BoxFit.cover,
@@ -142,7 +160,7 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                           color: Theme.of(
                             context,
                           ).iconTheme.color?.withOpacity(0.6),
-                          size: 60,
+                          size: 80,
                         ),
                       ),
                     )
@@ -151,58 +169,152 @@ class _NowPlayingCardState extends ConsumerState<NowPlayingCard>
                       color: Theme.of(
                         context,
                       ).iconTheme.color?.withOpacity(0.6),
-                      size: 60,
+                      size: 80,
                     ),
             ),
-            const SizedBox(width: 16),
+          ),
+          const SizedBox(height: 16),
 
-            // Track Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          // Track Info（中央揃え）
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  nowPlaying.track ?? 'Unknown Track',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  nowPlaying.artist ?? 'Unknown Artist',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (nowPlaying.album != null &&
+                    nowPlaying.album!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    nowPlaying.track ?? 'Unknown Track',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    nowPlaying.artist ?? 'Unknown Artist',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    nowPlaying.album!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(
                             context,
-                          ).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
                         ),
+                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (nowPlaying.album != null &&
-                      nowPlaying.album!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      nowPlaying.album!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
                 ],
-              ),
-            ),
+                const SizedBox(height: 16),
 
-            // Playing Indicator with Animation
-            _buildAnimatedLiveIndicator(context),
-          ],
-        ),
+                // Playing Indicator with Animation
+                Center(
+                  child: _buildAnimatedLiveIndicator(context),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  /// デスクトップ/タブレット用の横向きレイアウト
+  Widget _buildDesktopLayout(BuildContext context, nowPlaying) {
+    return Row(
+      children: [
+        // Album Art
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey[800],
+          ),
+          child: nowPlaying.imageUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: nowPlaying.imageUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(
+                      child: ImageLoadingIndicator(),
+                    ),
+                    errorWidget: (context, url, error) => Icon(
+                      Icons.music_note,
+                      color: Theme.of(
+                        context,
+                      ).iconTheme.color?.withOpacity(0.6),
+                      size: 60,
+                    ),
+                  ),
+                )
+              : Icon(
+                  Icons.music_note,
+                  color: Theme.of(
+                    context,
+                  ).iconTheme.color?.withOpacity(0.6),
+                  size: 60,
+                ),
+        ),
+        const SizedBox(width: 16),
+
+        // Track Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                nowPlaying.track ?? 'Unknown Track',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                nowPlaying.artist ?? 'Unknown Artist',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (nowPlaying.album != null && nowPlaying.album!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  nowPlaying.album!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Playing Indicator with Animation
+        _buildAnimatedLiveIndicator(context),
+      ],
     );
   }
 
