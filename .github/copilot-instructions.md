@@ -29,13 +29,13 @@
 
 ## バックエンドAPI
 
-アプリケーションは `http://localhost:3001` で実行されているLast.fmプロキシサーバーに接続し、以下のエンドポイントを使用します：
+アプリケーションは `https://localhost:8443` で実行されているLast.fmプロキシサーバーに接続し、以下のエンドポイントを使用します：
 - `GET /health` - ヘルスチェック
 - `GET /api/now-playing` - 現在再生中のトラック
 - `GET /api/reports/{period}` - 音楽レポート（日次/週次/月次）
 - `GET /api/recent-tracks` - 直近の再生履歴（パラメータ：limit、page、from、to）
 - `GET /api/stats` - サーバー統計
-- WebSocket接続: `ws://localhost:3001`
+- WebSocket接続: `wss://localhost:8443`
 
 ## コード生成
 
@@ -51,6 +51,7 @@ Freezed、JSONシリアライゼーション、Riverpodでのコード生成に�
 - null安全性を重視し、JSONパースではnullチェックを行う
 - 生成ファイル（*.g.dart、*.freezed.dart）はGitignoreに含める
 - エラーログとデバッグ情報を適切に実装する
+- 開発ビルドの実行には `npm run dev` を使用すること
 
 ## ファイル構造
 
