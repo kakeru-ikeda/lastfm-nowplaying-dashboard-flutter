@@ -8,6 +8,7 @@ import 'clickable_track_item.dart';
 import 'clickable_artist_item.dart';
 import 'app_loading_indicator.dart';
 import 'detailed_stats_chart.dart';
+import 'period_stats_charts.dart';
 
 class MusicReportCard extends ConsumerWidget {
   const MusicReportCard({super.key});
@@ -89,6 +90,10 @@ class MusicReportCard extends ConsumerWidget {
           _IndependentStatsChartSection(period: selectedPeriod),
           const SizedBox(height: AppConstants.defaultPadding * 2),
 
+          // 新しい期間別統計チャート
+          const PeriodStatsChartSection(),
+          const SizedBox(height: AppConstants.defaultPadding * 2),
+
           // レポートコンテンツ
           Consumer(
             builder: (context, ref, child) {
@@ -166,7 +171,8 @@ class _TopContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // レスポンシブ対応: モバイル・タブレットでは縦並び、デスクトップでは横並び
-    if (ResponsiveHelper.isMobile(context) || ResponsiveHelper.isTablet(context)) {
+    if (ResponsiveHelper.isMobile(context) ||
+        ResponsiveHelper.isTablet(context)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

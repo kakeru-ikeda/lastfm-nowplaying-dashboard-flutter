@@ -28,12 +28,21 @@ abstract class MusicRepository {
   Future<Either<Failure, UserStats>> getUserStats();
 
   // Detailed Stats
-  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats(
-      {String? date});
-  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats(
-      {String? date});
-  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats(
-      {String? year});
+  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats({
+    String? date,
+    DateTime? from,
+    DateTime? to,
+  });
+  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats({
+    String? date,
+    DateTime? from,
+    DateTime? to,
+  });
+  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats({
+    String? year,
+    DateTime? from,
+    DateTime? to,
+  });
 
   // Health Check
   Future<Either<Failure, HealthCheckResponse>> getHealthCheck();

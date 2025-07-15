@@ -22,9 +22,12 @@ abstract class MusicRemoteDataSource {
     DateTime? from,
     DateTime? to,
   });
-  Future<WeekDailyStatsResponse> getWeekDailyStats({String? date});
-  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats({String? date});
-  Future<YearMonthlyStatsResponse> getYearMonthlyStats({String? year});
+  Future<WeekDailyStatsResponse> getWeekDailyStats(
+      {String? date, DateTime? from, DateTime? to});
+  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats(
+      {String? date, DateTime? from, DateTime? to});
+  Future<YearMonthlyStatsResponse> getYearMonthlyStats(
+      {String? year, DateTime? from, DateTime? to});
   Stream<NowPlayingInfo> getNowPlayingStream();
   void closeWebSocket();
 }
@@ -360,11 +363,25 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   }
 
   @override
-  Future<WeekDailyStatsResponse> getWeekDailyStats({String? date}) async {
+  Future<WeekDailyStatsResponse> getWeekDailyStats(
+      {String? date, DateTime? from, DateTime? to}) async {
     try {
+      // パラメータの構築
+      Map<String, String> queryParams = {};
+
+      // 期間指定モード
+      if (from != null && to != null) {
+        queryParams['from'] = from.toIso8601String().split('T')[0];
+        queryParams['to'] = to.toIso8601String().split('T')[0];
+      }
+      // 単一日付モード（下位互換性）
+      else if (date != null) {
+        queryParams['date'] = date;
+      }
+
       final uri = Uri.parse(
-        '${AppConstants.baseUrl}${AppConstants.weekDailyStatsEndpoint}${date != null ? '?date=$date' : ''}',
-      );
+              '${AppConstants.baseUrl}${AppConstants.weekDailyStatsEndpoint}')
+          .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       final response = await httpClient.get(
         uri,
@@ -416,11 +433,25 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   }
 
   @override
-  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats({String? date}) async {
+  Future<MonthWeeklyStatsResponse> getMonthWeeklyStats(
+      {String? date, DateTime? from, DateTime? to}) async {
     try {
+      // パラメータの構築
+      Map<String, String> queryParams = {};
+
+      // 期間指定モード
+      if (from != null && to != null) {
+        queryParams['from'] = from.toIso8601String().split('T')[0];
+        queryParams['to'] = to.toIso8601String().split('T')[0];
+      }
+      // 単一日付モード（下位互換性）
+      else if (date != null) {
+        queryParams['date'] = date;
+      }
+
       final uri = Uri.parse(
-        '${AppConstants.baseUrl}${AppConstants.monthWeeklyStatsEndpoint}${date != null ? '?date=$date' : ''}',
-      );
+              '${AppConstants.baseUrl}${AppConstants.monthWeeklyStatsEndpoint}')
+          .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       final response = await httpClient.get(
         uri,
@@ -473,11 +504,25 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   }
 
   @override
-  Future<YearMonthlyStatsResponse> getYearMonthlyStats({String? year}) async {
+  Future<YearMonthlyStatsResponse> getYearMonthlyStats(
+      {String? year, DateTime? from, DateTime? to}) async {
     try {
+      // パラメータの構築
+      Map<String, String> queryParams = {};
+
+      // 期間指定モード
+      if (from != null && to != null) {
+        queryParams['from'] = from.toIso8601String().split('T')[0];
+        queryParams['to'] = to.toIso8601String().split('T')[0];
+      }
+      // 年指定モード（下位互換性）
+      else if (year != null) {
+        queryParams['year'] = year;
+      }
+
       final uri = Uri.parse(
-        '${AppConstants.baseUrl}${AppConstants.yearMonthlyStatsEndpoint}${year != null ? '?year=$year' : ''}',
-      );
+              '${AppConstants.baseUrl}${AppConstants.yearMonthlyStatsEndpoint}')
+          .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       final response = await httpClient.get(
         uri,

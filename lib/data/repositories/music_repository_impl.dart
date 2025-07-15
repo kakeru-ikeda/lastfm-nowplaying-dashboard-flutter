@@ -160,10 +160,17 @@ class MusicRepositoryImpl implements MusicRepository {
   }
 
   @override
-  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats(
-      {String? date}) async {
+  Future<Either<Failure, WeekDailyStatsResponse>> getWeekDailyStats({
+    String? date,
+    DateTime? from,
+    DateTime? to,
+  }) async {
     try {
-      final result = await remoteDataSource.getWeekDailyStats(date: date);
+      final result = await remoteDataSource.getWeekDailyStats(
+        date: date,
+        from: from,
+        to: to,
+      );
       return Right(result);
     } on NetworkException catch (e) {
       AppLogger.error('Network error in getWeekDailyStats', e);
@@ -180,10 +187,17 @@ class MusicRepositoryImpl implements MusicRepository {
   }
 
   @override
-  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats(
-      {String? date}) async {
+  Future<Either<Failure, MonthWeeklyStatsResponse>> getMonthWeeklyStats({
+    String? date,
+    DateTime? from,
+    DateTime? to,
+  }) async {
     try {
-      final result = await remoteDataSource.getMonthWeeklyStats(date: date);
+      final result = await remoteDataSource.getMonthWeeklyStats(
+        date: date,
+        from: from,
+        to: to,
+      );
       return Right(result);
     } on NetworkException catch (e) {
       AppLogger.error('Network error in getMonthWeeklyStats', e);
@@ -200,10 +214,17 @@ class MusicRepositoryImpl implements MusicRepository {
   }
 
   @override
-  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats(
-      {String? year}) async {
+  Future<Either<Failure, YearMonthlyStatsResponse>> getYearMonthlyStats({
+    String? year,
+    DateTime? from,
+    DateTime? to,
+  }) async {
     try {
-      final result = await remoteDataSource.getYearMonthlyStats(year: year);
+      final result = await remoteDataSource.getYearMonthlyStats(
+        year: year,
+        from: from,
+        to: to,
+      );
       return Right(result);
     } on NetworkException catch (e) {
       AppLogger.error('Network error in getYearMonthlyStats', e);
