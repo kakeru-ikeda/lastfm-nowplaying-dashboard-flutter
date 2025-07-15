@@ -16,34 +16,26 @@ class PeriodStatsChartSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPeriod = ref.watch(selectedPeriodProvider);
-    
+
     // 選択された期間に応じてチャートを表示
     switch (selectedPeriod) {
       case 'daily':
         return _PeriodStatsCard(
-          title: '📊 週間統計',
-          subtitle: '日別の再生数',
           periodType: PeriodType.weekly,
           child: _WeeklyStatsChart(),
         );
       case 'weekly':
         return _PeriodStatsCard(
-          title: '📈 月間統計',
-          subtitle: '週別の再生数',
           periodType: PeriodType.monthly,
           child: _MonthlyStatsChart(),
         );
       case 'monthly':
         return _PeriodStatsCard(
-          title: '📉 年間統計',
-          subtitle: '月別の再生数',
           periodType: PeriodType.yearly,
           child: _YearlyStatsChart(),
         );
       default:
         return _PeriodStatsCard(
-          title: '� 週間統計',
-          subtitle: '日別の再生数',
           periodType: PeriodType.weekly,
           child: _WeeklyStatsChart(),
         );
@@ -53,14 +45,10 @@ class PeriodStatsChartSection extends ConsumerWidget {
 
 /// 期間統計カード
 class _PeriodStatsCard extends ConsumerWidget {
-  final String title;
-  final String subtitle;
   final PeriodType periodType;
   final Widget child;
 
   const _PeriodStatsCard({
-    required this.title,
-    required this.subtitle,
     required this.periodType,
     required this.child,
   });
@@ -77,37 +65,6 @@ class _PeriodStatsCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // タイトル
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.6),
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                PeriodResetButton(periodType: periodType),
-              ],
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-
             // ナビゲーション
             PeriodNavigationBar(periodType: periodType),
             const SizedBox(height: AppConstants.defaultPadding),
@@ -265,7 +222,7 @@ class _WeeklyStatsChart extends ConsumerWidget {
                     if (index >= 0 && index < stats.stats.length) {
                       final item = stats.stats[index];
                       return LineTooltipItem(
-                        '${item.label}\\n${item.scrobbles} scrobbles',
+                        '${item.scrobbles} scrobbles',
                         TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -415,7 +372,7 @@ class _MonthlyStatsChart extends ConsumerWidget {
                     if (groupIndex >= 0 && groupIndex < stats.stats.length) {
                       final item = stats.stats[groupIndex];
                       return BarTooltipItem(
-                        '第${item.weekNumber}週\\n${item.scrobbles} scrobbles',
+                        '${item.scrobbles} scrobbles',
                         TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -585,7 +542,7 @@ class _YearlyStatsChart extends ConsumerWidget {
                     if (index >= 0 && index < stats.stats.length) {
                       final item = stats.stats[index];
                       return LineTooltipItem(
-                        '${item.month}月\\n${item.scrobbles} scrobbles',
+                        '${item.scrobbles} scrobbles',
                         TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
