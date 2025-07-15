@@ -97,7 +97,8 @@ class _WeeklyStatsChart extends ConsumerWidget {
           // 選択された日付のインデックスを取得
           int? selectedIndex;
           if (selectedDate != null) {
-            selectedIndex = stats.stats.indexWhere((item) => item.date == selectedDate);
+            selectedIndex =
+                stats.stats.indexWhere((item) => item.date == selectedDate);
             if (selectedIndex == -1) selectedIndex = null;
           }
 
@@ -209,7 +210,7 @@ class _WeeklyStatsChart extends ConsumerWidget {
                       final isSelected = selectedIndex == index;
                       return FlDotCirclePainter(
                         radius: isSelected ? 8 : 6,
-                        color: isSelected 
+                        color: isSelected
                             ? Theme.of(context).colorScheme.secondary
                             : Theme.of(context).colorScheme.primary,
                         strokeWidth: 2,
@@ -244,7 +245,8 @@ class _WeeklyStatsChart extends ConsumerWidget {
                     return null;
                   }).toList(),
                 ),
-                touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+                touchCallback:
+                    (FlTouchEvent event, LineTouchResponse? response) {
                   if (event is FlTapUpEvent && response != null) {
                     final spot = response.lineBarSpots?.first;
                     if (spot != null) {
@@ -252,14 +254,13 @@ class _WeeklyStatsChart extends ConsumerWidget {
                       if (index >= 0 && index < stats.stats.length) {
                         final selectedStat = stats.stats[index];
                         final selectedDate = selectedStat.date;
-                        
-                        AppLogger.debug('週間チャート: タッチイベント発生 - $selectedDate');
-                        
-                        // 選択された日付を更新
-                        ref.read(reportDateProvider.notifier).state = selectedDate;
-                        
-                        // 遅延レポート更新をトリガー
-                        ref.invalidate(delayedReportUpdateProvider('daily'));
+
+                        AppLogger.debug(
+                            '週間チャート: タッチイベント発生 - Date: $selectedDate');
+
+                        // 新しい状態管理を使用してレポートを更新
+                        ref.read(reportUpdateNotifierProvider.notifier)
+                            .updateReport('daily', selectedDate);
                       }
                     }
                   }
@@ -299,8 +300,8 @@ class _MonthlyStatsChart extends ConsumerWidget {
           // 選択された週のインデックスを取得
           int? selectedIndex;
           if (selectedDate != null && selectedDate.contains(' - ')) {
-            selectedIndex = stats.stats.indexWhere((item) => 
-              '${item.startDate} - ${item.endDate}' == selectedDate);
+            selectedIndex = stats.stats.indexWhere((item) =>
+                '${item.startDate} - ${item.endDate}' == selectedDate);
             if (selectedIndex == -1) selectedIndex = null;
           }
 
@@ -392,13 +393,13 @@ class _MonthlyStatsChart extends ConsumerWidget {
                 final index = entry.key;
                 final scrobbles = entry.value.scrobbles.toDouble();
                 final isSelected = selectedIndex == index;
-                
+
                 return BarChartGroupData(
                   x: index,
                   barRods: [
                     BarChartRodData(
                       toY: scrobbles,
-                      color: isSelected 
+                      color: isSelected
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.secondary,
                       width: 20,
@@ -427,23 +428,24 @@ class _MonthlyStatsChart extends ConsumerWidget {
                     return null;
                   },
                 ),
-                touchCallback: (FlTouchEvent event, BarTouchResponse? response) {
+                touchCallback:
+                    (FlTouchEvent event, BarTouchResponse? response) {
                   if (event is FlTapUpEvent && response != null) {
                     final spot = response.spot;
                     if (spot != null) {
                       final groupIndex = spot.touchedBarGroupIndex;
                       if (groupIndex >= 0 && groupIndex < stats.stats.length) {
                         final selectedStat = stats.stats[groupIndex];
-                        // 週の範囲を日付として使用
-                        final selectedDate = '${selectedStat.startDate} - ${selectedStat.endDate}';
-                        
-                        AppLogger.debug('月間チャート: タッチイベント発生 - Week ${selectedStat.weekNumber}');
-                        
-                        // 選択された日付を更新
-                        ref.read(reportDateProvider.notifier).state = selectedDate;
-                        
-                        // 遅延レポート更新をトリガー
-                        ref.invalidate(delayedReportUpdateProvider('weekly'));
+                        // 週の範囲を日付として使用（レポート用）
+                        final selectedDate =
+                            '${selectedStat.startDate} - ${selectedStat.endDate}';
+
+                        AppLogger.debug(
+                            '月間チャート: タッチイベント発生 - Week ${selectedStat.weekNumber}, Date: $selectedDate');
+
+                        // 新しい状態管理を使用してレポートを更新
+                        ref.read(reportUpdateNotifierProvider.notifier)
+                            .updateReport('weekly', selectedDate);
                       }
                     }
                   }
@@ -488,8 +490,8 @@ class _YearlyStatsChart extends ConsumerWidget {
               final year = int.tryParse(parts[0]);
               final month = int.tryParse(parts[1]);
               if (year != null && month != null) {
-                selectedIndex = stats.stats.indexWhere((item) => 
-                  item.year == year && item.month == month);
+                selectedIndex = stats.stats.indexWhere(
+                    (item) => item.year == year && item.month == month);
                 if (selectedIndex == -1) selectedIndex = null;
               }
             }
@@ -603,7 +605,7 @@ class _YearlyStatsChart extends ConsumerWidget {
                       final isSelected = selectedIndex == index;
                       return FlDotCirclePainter(
                         radius: isSelected ? 8 : 6,
-                        color: isSelected 
+                        color: isSelected
                             ? Theme.of(context).colorScheme.secondary
                             : Theme.of(context).colorScheme.tertiary,
                         strokeWidth: 2,
@@ -638,23 +640,24 @@ class _YearlyStatsChart extends ConsumerWidget {
                     return null;
                   }).toList(),
                 ),
-                touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+                touchCallback:
+                    (FlTouchEvent event, LineTouchResponse? response) {
                   if (event is FlTapUpEvent && response != null) {
                     final spot = response.lineBarSpots?.first;
                     if (spot != null) {
                       final index = spot.x.toInt();
                       if (index >= 0 && index < stats.stats.length) {
                         final selectedStat = stats.stats[index];
-                        // 年月の形式で日付を設定
-                        final selectedDate = '${selectedStat.year}-${selectedStat.month.toString().padLeft(2, '0')}';
-                        
-                        AppLogger.debug('年間チャート: タッチイベント発生 - ${selectedStat.year}年${selectedStat.month}月');
-                        
-                        // 選択された日付を更新
-                        ref.read(reportDateProvider.notifier).state = selectedDate;
-                        
-                        // 遅延レポート更新をトリガー
-                        ref.invalidate(delayedReportUpdateProvider('monthly'));
+                        // 年月の形式で日付を設定（レポート用）
+                        final selectedDate =
+                            '${selectedStat.year}-${selectedStat.month.toString().padLeft(2, '0')}';
+
+                        AppLogger.debug(
+                            '年間チャート: タッチイベント発生 - ${selectedStat.year}年${selectedStat.month}月, Date: $selectedDate');
+
+                        // 新しい状態管理を使用してレポートを更新
+                        ref.read(reportUpdateNotifierProvider.notifier)
+                            .updateReport('monthly', selectedDate);
                       }
                     }
                   }

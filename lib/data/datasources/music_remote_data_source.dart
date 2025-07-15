@@ -95,9 +95,30 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
   @override
   Future<MusicReport> getReport(String period, {String? date}) async {
     try {
+      // 日付フォーマットを正規化
+      String? processedDate = date;
+      if (date != null) {
+        if (date.contains(' - ')) {
+          // 週の範囲の場合は開始日のみを使用
+          processedDate = date.split(' - ')[0];
+          AppLogger.debug('週の範囲形式を変換: $date -> $processedDate');
+        } else if (period == 'monthly' && date.length == 7) {
+          // 月次レポートでYYYY-MM形式の場合は月の開始日に変換
+          processedDate = '$date-01';
+          AppLogger.debug('月次レポート用に日付を変換: $date -> $processedDate');
+        } else if (period == 'yearly' && date.length == 4) {
+          // 年次レポートでYYYY形式の場合は年の開始日に変換
+          processedDate = '$date-01-01';
+          AppLogger.debug('年次レポート用に日付を変換: $date -> $processedDate');
+        }
+      }
+
       final uri = Uri.parse(
-        '${AppConstants.baseUrl}${AppConstants.reportsEndpoint}/$period${date != null ? '?date=$date' : ''}',
+        '${AppConstants.baseUrl}${AppConstants.reportsEndpoint}/$period${processedDate != null ? '?date=$processedDate' : ''}',
       );
+
+      AppLogger.debug('Report API リクエスト: ${uri.toString()}');
+      AppLogger.debug('Report API パラメータ: period=$period, date=$processedDate');
 
       final response = await httpClient.get(
         uri,
@@ -135,6 +156,10 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
           );
         }
       } else {
+        final responseBody = response.body;
+        AppLogger.error('Report API エラーレスポンス: ${response.statusCode}');
+        AppLogger.error('Report API エラーボディ: $responseBody');
+
         throw NetworkException(
           'Failed to fetch report',
           statusCode: response.statusCode,
@@ -446,7 +471,14 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
       }
       // 単一日付モード（下位互換性）
       else if (date != null) {
-        queryParams['date'] = date;
+        // 月の範囲形式（YYYY-MM-DD - YYYY-MM-DD）を単一日付に変換
+        String processedDate = date;
+        if (date.contains(' - ')) {
+          // 月の範囲の場合は開始日のみを使用
+          processedDate = date.split(' - ')[0];
+          AppLogger.debug('月の範囲形式を変換: $date -> $processedDate');
+        }
+        queryParams['date'] = processedDate;
       }
 
       final uri = Uri.parse(
@@ -517,7 +549,14 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
       }
       // 年指定モード（下位互換性）
       else if (year != null) {
-        queryParams['year'] = year;
+        // 年の範囲形式（YYYY-MM-DD - YYYY-MM-DD）を単一日付に変換
+        String processedYear = year;
+        if (year.contains(' - ')) {
+          // 年の範囲の場合は開始日のみを使用
+          processedYear = year.split(' - ')[0];
+          AppLogger.debug('年の範囲形式を変換: $year -> $processedYear');
+        }
+        queryParams['year'] = processedYear;
       }
 
       final uri = Uri.parse(

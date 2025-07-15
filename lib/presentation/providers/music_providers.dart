@@ -141,7 +141,7 @@ final yearMonthlyStatsProvider =
 // レポート日付プロバイダー
 final reportDateProvider = StateProvider<String?>((ref) => null);
 
-// レポートプロバイダー
+// レポートプロバイダー - 日付変更時の重複リクエストを防止
 final musicReportProvider = FutureProvider.family<MusicReport, String>((
   ref,
   period,
@@ -161,6 +161,70 @@ final musicReportProvider = FutureProvider.family<MusicReport, String>((
     return report;
   });
 });
+
+// レポート状態管理用プロバイダー - 手動更新制御
+final reportUpdateNotifierProvider = StateNotifierProvider<ReportUpdateNotifier, ReportUpdateState>((ref) {
+  return ReportUpdateNotifier(ref);
+});
+
+class ReportUpdateState {
+  final bool isLoading;
+  final String? lastRequestedDate;
+  final String? lastRequestedPeriod;
+  
+  const ReportUpdateState({
+    this.isLoading = false,
+    this.lastRequestedDate,
+    this.lastRequestedPeriod,
+  });
+  
+  ReportUpdateState copyWith({
+    bool? isLoading,
+    String? lastRequestedDate,
+    String? lastRequestedPeriod,
+  }) {
+    return ReportUpdateState(
+      isLoading: isLoading ?? this.isLoading,
+      lastRequestedDate: lastRequestedDate ?? this.lastRequestedDate,
+      lastRequestedPeriod: lastRequestedPeriod ?? this.lastRequestedPeriod,
+    );
+  }
+}
+
+class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
+  final Ref ref;
+  
+  ReportUpdateNotifier(this.ref) : super(const ReportUpdateState());
+  
+  Future<void> updateReport(String period, String? date) async {
+    // 重複リクエストを防ぐ
+    if (state.isLoading || 
+        (state.lastRequestedDate == date && state.lastRequestedPeriod == period)) {
+      AppLogger.debug('重複リクエストをスキップ: period=$period, date=$date');
+      return;
+    }
+    
+    state = state.copyWith(
+      isLoading: true,
+      lastRequestedDate: date,
+      lastRequestedPeriod: period,
+    );
+    
+    try {
+      // 日付を更新
+      ref.read(reportDateProvider.notifier).state = date;
+      
+      // レポートプロバイダーを無効化して再取得
+      ref.invalidate(musicReportProvider(period));
+      
+      // 完了まで少し待つ
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+}
 
 // 統計チャート専用プロバイダー - レポートデータとは独立
 final chartStatsProvider = FutureProvider.family<dynamic, String>((
@@ -470,11 +534,11 @@ final delayedReportUpdateProvider = FutureProvider.family<void, String>((
     // 短い遅延を追加してチャートの再描画を防ぐ
     await Future.delayed(const Duration(milliseconds: 100));
 
-    // レポートプロバイダーのみを無効化（グラフデータは再利用）
-    ref.invalidate(musicReportProvider(period));
-
     // グラフポイントタッチによる日付変更では、グラフデータのキャッシュIDは更新しない
     // こうすることでグラフデータの不要なリロードを防止する
     AppLogger.debug('グラフポイントタッチ: レポートデータのみ更新し、グラフデータは再利用します');
+    
+    // 注意: invalidateを呼び出すとmusicReportProviderが自動的に再実行される
+    // reportDateProviderを監視しているため、日付変更で自動的にAPIリクエストが発生
   }
 });
