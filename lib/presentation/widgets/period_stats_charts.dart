@@ -84,6 +84,7 @@ class _WeeklyStatsChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(weeklyPeriodProvider);
     final statsAsync = ref.watch(periodWeekDailyStatsProvider(period));
+    final selectedDate = ref.watch(reportDateProvider);
 
     return SizedBox(
       height: AppConstants.chartHeight,
@@ -91,6 +92,13 @@ class _WeeklyStatsChart extends ConsumerWidget {
         data: (stats) {
           if (stats.stats.isEmpty) {
             return const Center(child: Text('データがありません'));
+          }
+
+          // 選択された日付のインデックスを取得
+          int? selectedIndex;
+          if (selectedDate != null) {
+            selectedIndex = stats.stats.indexWhere((item) => item.date == selectedDate);
+            if (selectedIndex == -1) selectedIndex = null;
           }
 
           return LineChart(
@@ -197,13 +205,17 @@ class _WeeklyStatsChart extends ConsumerWidget {
                   isStrokeCapRound: true,
                   dotData: FlDotData(
                     show: true,
-                    getDotPainter: (spot, percent, barData, index) =>
-                        FlDotCirclePainter(
-                      radius: 6,
-                      color: Theme.of(context).colorScheme.primary,
-                      strokeWidth: 2,
-                      strokeColor: Theme.of(context).colorScheme.surface,
-                    ),
+                    getDotPainter: (spot, percent, barData, index) {
+                      final isSelected = selectedIndex == index;
+                      return FlDotCirclePainter(
+                        radius: isSelected ? 8 : 6,
+                        color: isSelected 
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.primary,
+                        strokeWidth: 2,
+                        strokeColor: Theme.of(context).colorScheme.surface,
+                      );
+                    },
                   ),
                   belowBarData: BarAreaData(
                     show: true,
@@ -232,6 +244,26 @@ class _WeeklyStatsChart extends ConsumerWidget {
                     return null;
                   }).toList(),
                 ),
+                touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+                  if (event is FlTapUpEvent && response != null) {
+                    final spot = response.lineBarSpots?.first;
+                    if (spot != null) {
+                      final index = spot.x.toInt();
+                      if (index >= 0 && index < stats.stats.length) {
+                        final selectedStat = stats.stats[index];
+                        final selectedDate = selectedStat.date;
+                        
+                        AppLogger.debug('週間チャート: タッチイベント発生 - $selectedDate');
+                        
+                        // 選択された日付を更新
+                        ref.read(reportDateProvider.notifier).state = selectedDate;
+                        
+                        // 遅延レポート更新をトリガー
+                        ref.invalidate(delayedReportUpdateProvider('daily'));
+                      }
+                    }
+                  }
+                },
               ),
             ),
           );
@@ -254,6 +286,7 @@ class _MonthlyStatsChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(monthlyPeriodProvider);
     final statsAsync = ref.watch(periodMonthWeeklyStatsProvider(period));
+    final selectedDate = ref.watch(reportDateProvider);
 
     return SizedBox(
       height: AppConstants.chartHeight,
@@ -261,6 +294,14 @@ class _MonthlyStatsChart extends ConsumerWidget {
         data: (stats) {
           if (stats.stats.isEmpty) {
             return const Center(child: Text('データがありません'));
+          }
+
+          // 選択された週のインデックスを取得
+          int? selectedIndex;
+          if (selectedDate != null && selectedDate.contains(' - ')) {
+            selectedIndex = stats.stats.indexWhere((item) => 
+              '${item.startDate} - ${item.endDate}' == selectedDate);
+            if (selectedIndex == -1) selectedIndex = null;
           }
 
           return BarChart(
@@ -350,12 +391,16 @@ class _MonthlyStatsChart extends ConsumerWidget {
               barGroups: stats.stats.asMap().entries.map((entry) {
                 final index = entry.key;
                 final scrobbles = entry.value.scrobbles.toDouble();
+                final isSelected = selectedIndex == index;
+                
                 return BarChartGroupData(
                   x: index,
                   barRods: [
                     BarChartRodData(
                       toY: scrobbles,
-                      color: Theme.of(context).colorScheme.secondary,
+                      color: isSelected 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.secondary,
                       width: 20,
                       borderRadius:
                           const BorderRadius.vertical(top: Radius.circular(4)),
@@ -382,6 +427,27 @@ class _MonthlyStatsChart extends ConsumerWidget {
                     return null;
                   },
                 ),
+                touchCallback: (FlTouchEvent event, BarTouchResponse? response) {
+                  if (event is FlTapUpEvent && response != null) {
+                    final spot = response.spot;
+                    if (spot != null) {
+                      final groupIndex = spot.touchedBarGroupIndex;
+                      if (groupIndex >= 0 && groupIndex < stats.stats.length) {
+                        final selectedStat = stats.stats[groupIndex];
+                        // 週の範囲を日付として使用
+                        final selectedDate = '${selectedStat.startDate} - ${selectedStat.endDate}';
+                        
+                        AppLogger.debug('月間チャート: タッチイベント発生 - Week ${selectedStat.weekNumber}');
+                        
+                        // 選択された日付を更新
+                        ref.read(reportDateProvider.notifier).state = selectedDate;
+                        
+                        // 遅延レポート更新をトリガー
+                        ref.invalidate(delayedReportUpdateProvider('weekly'));
+                      }
+                    }
+                  }
+                },
               ),
             ),
           );
@@ -404,6 +470,7 @@ class _YearlyStatsChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(yearlyPeriodProvider);
     final statsAsync = ref.watch(periodYearMonthlyStatsProvider(period));
+    final selectedDate = ref.watch(reportDateProvider);
 
     return SizedBox(
       height: AppConstants.chartHeight,
@@ -411,6 +478,21 @@ class _YearlyStatsChart extends ConsumerWidget {
         data: (stats) {
           if (stats.stats.isEmpty) {
             return const Center(child: Text('データがありません'));
+          }
+
+          // 選択された月のインデックスを取得
+          int? selectedIndex;
+          if (selectedDate != null && selectedDate.contains('-')) {
+            final parts = selectedDate.split('-');
+            if (parts.length == 2) {
+              final year = int.tryParse(parts[0]);
+              final month = int.tryParse(parts[1]);
+              if (year != null && month != null) {
+                selectedIndex = stats.stats.indexWhere((item) => 
+                  item.year == year && item.month == month);
+                if (selectedIndex == -1) selectedIndex = null;
+              }
+            }
           }
 
           return LineChart(
@@ -517,13 +599,17 @@ class _YearlyStatsChart extends ConsumerWidget {
                   isStrokeCapRound: true,
                   dotData: FlDotData(
                     show: true,
-                    getDotPainter: (spot, percent, barData, index) =>
-                        FlDotCirclePainter(
-                      radius: 6,
-                      color: Theme.of(context).colorScheme.tertiary,
-                      strokeWidth: 2,
-                      strokeColor: Theme.of(context).colorScheme.surface,
-                    ),
+                    getDotPainter: (spot, percent, barData, index) {
+                      final isSelected = selectedIndex == index;
+                      return FlDotCirclePainter(
+                        radius: isSelected ? 8 : 6,
+                        color: isSelected 
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.tertiary,
+                        strokeWidth: 2,
+                        strokeColor: Theme.of(context).colorScheme.surface,
+                      );
+                    },
                   ),
                   belowBarData: BarAreaData(
                     show: true,
@@ -552,6 +638,27 @@ class _YearlyStatsChart extends ConsumerWidget {
                     return null;
                   }).toList(),
                 ),
+                touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+                  if (event is FlTapUpEvent && response != null) {
+                    final spot = response.lineBarSpots?.first;
+                    if (spot != null) {
+                      final index = spot.x.toInt();
+                      if (index >= 0 && index < stats.stats.length) {
+                        final selectedStat = stats.stats[index];
+                        // 年月の形式で日付を設定
+                        final selectedDate = '${selectedStat.year}-${selectedStat.month.toString().padLeft(2, '0')}';
+                        
+                        AppLogger.debug('年間チャート: タッチイベント発生 - ${selectedStat.year}年${selectedStat.month}月');
+                        
+                        // 選択された日付を更新
+                        ref.read(reportDateProvider.notifier).state = selectedDate;
+                        
+                        // 遅延レポート更新をトリガー
+                        ref.invalidate(delayedReportUpdateProvider('monthly'));
+                      }
+                    }
+                  }
+                },
               ),
             ),
           );
