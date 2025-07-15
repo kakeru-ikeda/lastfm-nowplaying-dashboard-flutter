@@ -228,8 +228,8 @@ class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
       // レポートプロバイダーを無効化して再取得
       ref.invalidate(musicReportProvider(period));
       
-      // APIリクエストが完了するまで待機（ローディング状態を維持）
-      await Future.delayed(const Duration(milliseconds: 300));
+      // APIリクエストの完了を待つ
+      await ref.read(musicReportProvider(period).future);
       
       AppLogger.debug('レポート更新完了: period=$period, date=$date');
       
