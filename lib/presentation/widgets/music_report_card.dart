@@ -18,19 +18,6 @@ class MusicReportCard extends ConsumerWidget {
     final reportAsync = ref.watch(musicReportProvider(selectedPeriod));
     final selectedDate = ref.watch(reportDateProvider);
 
-    // 遅延更新プロバイダーを監視して、必要に応じてレポートを更新
-    ref.listen<AsyncValue<void>>(
-      delayedReportUpdateProvider(selectedPeriod),
-      (previous, next) {
-        next.whenOrNull(
-          data: (_) {
-            // 遅延更新が完了したらレポートを再取得
-            ref.invalidate(musicReportProvider(selectedPeriod));
-          },
-        );
-      },
-    );
-
     // 選択された日付があれば表示
     Widget? dateChip;
     if (selectedDate != null) {
@@ -64,8 +51,9 @@ class MusicReportCard extends ConsumerWidget {
               label: Text(dateLabel),
               deleteIcon: const Icon(Icons.close, size: 18),
               onDeleted: () {
-                ref.read(reportDateProvider.notifier).state = null;
-                ref.invalidate(musicReportProvider(selectedPeriod));
+                // ReportUpdateNotifierを使用してリセット
+                ref.read(reportUpdateNotifierProvider.notifier)
+                    .updateReport(selectedPeriod, null);
               },
               backgroundColor:
                   Theme.of(context).colorScheme.primary.withOpacity(0.1),
@@ -94,6 +82,12 @@ class MusicReportCard extends ConsumerWidget {
             builder: (context, ref, child) {
               final isRefreshing =
                   ref.watch(isRefreshingProvider(selectedPeriod));
+              final reportUpdateState = ref.watch(reportUpdateNotifierProvider);
+
+              // ReportUpdateNotifierのローディング状態をチェック
+              if (reportUpdateState.isLoading) {
+                return const ReportLoadingIndicator();
+              }
 
               // リフレッシュ中の場合は明示的にローディングインジケータを表示
               if (isRefreshing) {

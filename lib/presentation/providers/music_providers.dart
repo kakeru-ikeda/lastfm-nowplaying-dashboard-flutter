@@ -141,13 +141,14 @@ final yearMonthlyStatsProvider =
 // レポート日付プロバイダー
 final reportDateProvider = StateProvider<String?>((ref) => null);
 
-// レポートプロバイダー - 日付変更時の重複リクエストを防止
+// レポートプロバイダー - 手動制御版（自動監視しない）
 final musicReportProvider = FutureProvider.family<MusicReport, String>((
   ref,
   period,
 ) async {
   final repository = ref.watch(musicRepositoryProvider);
-  final selectedDate = ref.watch(reportDateProvider);
+  // reportDateProviderを監視しないように変更
+  final selectedDate = ref.read(reportDateProvider);
 
   AppLogger.debug('Fetching report for period: $period, date: $selectedDate');
 
@@ -198,12 +199,19 @@ class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
   
   Future<void> updateReport(String period, String? date) async {
     // 重複リクエストを防ぐ
-    if (state.isLoading || 
-        (state.lastRequestedDate == date && state.lastRequestedPeriod == period)) {
-      AppLogger.debug('重複リクエストをスキップ: period=$period, date=$date');
+    if (state.isLoading) {
+      AppLogger.debug('既にロード中のためスキップ: period=$period, date=$date');
       return;
     }
     
+    if (state.lastRequestedDate == date && state.lastRequestedPeriod == period) {
+      AppLogger.debug('同じリクエストのためスキップ: period=$period, date=$date');
+      return;
+    }
+    
+    AppLogger.debug('レポート更新開始: period=$period, date=$date');
+    
+    // ローディング状態を開始
     state = state.copyWith(
       isLoading: true,
       lastRequestedDate: date,
@@ -214,13 +222,21 @@ class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
       // 日付を更新
       ref.read(reportDateProvider.notifier).state = date;
       
+      // 少し待ってからプロバイダーを無効化（UIの更新を確保）
+      await Future.delayed(const Duration(milliseconds: 50));
+      
       // レポートプロバイダーを無効化して再取得
       ref.invalidate(musicReportProvider(period));
       
-      // 完了まで少し待つ
-      await Future.delayed(const Duration(milliseconds: 200));
+      // APIリクエストが完了するまで待機（ローディング状態を維持）
+      await Future.delayed(const Duration(milliseconds: 300));
       
+      AppLogger.debug('レポート更新完了: period=$period, date=$date');
+      
+    } catch (e) {
+      AppLogger.error('レポート更新エラー: $e');
     } finally {
+      // ローディング状態を終了
       state = state.copyWith(isLoading: false);
     }
   }
@@ -518,27 +534,4 @@ final autoRefreshUserStatsProvider = StreamProvider<UserStats>((
       }
     },
   );
-});
-
-// 遅延レポート更新プロバイダー - チャートタップ時はレポートのみを更新し、グラフデータは再利用する
-final delayedReportUpdateProvider = FutureProvider.family<void, String>((
-  ref,
-  period,
-) async {
-  final selectedDate = ref.watch(reportDateProvider);
-
-  if (selectedDate != null) {
-    AppLogger.debug(
-        'Delayed report update for period: $period, date: $selectedDate');
-
-    // 短い遅延を追加してチャートの再描画を防ぐ
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    // グラフポイントタッチによる日付変更では、グラフデータのキャッシュIDは更新しない
-    // こうすることでグラフデータの不要なリロードを防止する
-    AppLogger.debug('グラフポイントタッチ: レポートデータのみ更新し、グラフデータは再利用します');
-    
-    // 注意: invalidateを呼び出すとmusicReportProviderが自動的に再実行される
-    // reportDateProviderを監視しているため、日付変更で自動的にAPIリクエストが発生
-  }
 });

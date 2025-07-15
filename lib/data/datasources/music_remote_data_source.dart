@@ -129,7 +129,7 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
-        AppLogger.debug('API Response Body: $responseBody');
+        // AppLogger.debug('API Response Body: $responseBody');
 
         if (responseBody.isEmpty) {
           throw ServerException(
@@ -417,7 +417,7 @@ class MusicRemoteDataSourceImpl implements MusicRemoteDataSource {
 
       if (response.statusCode == 200) {
         final responseBody = response.body;
-        AppLogger.debug('API Response Body: $responseBody');
+        // AppLogger.debug('API Response Body: $responseBody');
 
         if (responseBody.isEmpty) {
           throw ServerException(
