@@ -7,7 +7,6 @@ import 'section_card.dart';
 import 'clickable_track_item.dart';
 import 'clickable_artist_item.dart';
 import 'app_loading_indicator.dart';
-import 'detailed_stats_chart.dart';
 import 'period_stats_charts.dart';
 
 class MusicReportCard extends ConsumerWidget {
@@ -86,11 +85,7 @@ class MusicReportCard extends ConsumerWidget {
           // 選択された日付の表示
           if (dateChip != null) dateChip,
 
-          // 独立したチャートセクション
-          _IndependentStatsChartSection(period: selectedPeriod),
-          const SizedBox(height: AppConstants.defaultPadding * 2),
-
-          // 新しい期間別統計チャート
+          // 期間別統計チャート - Report Period に応じて表示
           const PeriodStatsChartSection(),
           const SizedBox(height: AppConstants.defaultPadding * 2),
 
@@ -139,25 +134,6 @@ class MusicReportCard extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// 独立した統計チャートセクション - reportDateProviderを監視しない
-class _IndependentStatsChartSection extends ConsumerWidget {
-  final String period;
-
-  const _IndependentStatsChartSection({required this.period});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // キャッシュIDを監視（リフレッシュ時に更新される）
-    final cacheId = ref.watch(chartDataCacheIdProvider);
-
-    // キャッシュIDに基づいてキーを割り当て、データが更新されたときだけ再構築されるようにする
-    return DetailedStatsChart(
-      key: ValueKey('independent_chart_${period}_${cacheId}'),
-      period: period,
     );
   }
 }

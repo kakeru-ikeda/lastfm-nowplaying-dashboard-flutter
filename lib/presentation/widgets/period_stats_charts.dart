@@ -5,6 +5,7 @@ import '../../core/utils/period_calculator.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/helpers.dart';
 import '../providers/period_providers.dart';
+import '../providers/music_providers.dart';
 import 'period_navigation_bar.dart';
 import 'app_loading_indicator.dart';
 
@@ -14,40 +15,44 @@ class PeriodStatsChartSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      children: [
-        // 週間統計
-        _PeriodStatsCard(
+    final selectedPeriod = ref.watch(selectedPeriodProvider);
+    
+    // 選択された期間に応じてチャートを表示
+    switch (selectedPeriod) {
+      case 'daily':
+        return _PeriodStatsCard(
           title: '📊 週間統計',
           subtitle: '日別の再生数',
           periodType: PeriodType.weekly,
           child: _WeeklyStatsChart(),
-        ),
-        const SizedBox(height: AppConstants.defaultPadding),
-
-        // 月間統計
-        _PeriodStatsCard(
+        );
+      case 'weekly':
+        return _PeriodStatsCard(
           title: '📈 月間統計',
           subtitle: '週別の再生数',
           periodType: PeriodType.monthly,
           child: _MonthlyStatsChart(),
-        ),
-        const SizedBox(height: AppConstants.defaultPadding),
-
-        // 年間統計
-        _PeriodStatsCard(
+        );
+      case 'monthly':
+        return _PeriodStatsCard(
           title: '📉 年間統計',
           subtitle: '月別の再生数',
           periodType: PeriodType.yearly,
           child: _YearlyStatsChart(),
-        ),
-      ],
-    );
+        );
+      default:
+        return _PeriodStatsCard(
+          title: '� 週間統計',
+          subtitle: '日別の再生数',
+          periodType: PeriodType.weekly,
+          child: _WeeklyStatsChart(),
+        );
+    }
   }
 }
 
 /// 期間統計カード
-class _PeriodStatsCard extends StatelessWidget {
+class _PeriodStatsCard extends ConsumerWidget {
   final String title;
   final String subtitle;
   final PeriodType periodType;
@@ -61,7 +66,7 @@ class _PeriodStatsCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
