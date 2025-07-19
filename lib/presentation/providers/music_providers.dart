@@ -4,7 +4,6 @@ import '../../domain/entities/now_playing_info.dart';
 import '../../domain/entities/music_report.dart';
 import '../../domain/entities/server_stats.dart';
 import '../../domain/entities/recent_track_info.dart';
-import '../../domain/entities/recent_tracks_params.dart';
 import '../../domain/entities/user_stats.dart';
 import '../../domain/entities/stats_response.dart';
 import '../../domain/repositories/music_repository.dart';
@@ -36,39 +35,6 @@ final nowPlayingProvider = FutureProvider<NowPlayingInfo>((ref) async {
   }, (nowPlaying) => nowPlaying);
 });
 
-// Recent Tracks Provider with parameters
-final recentTracksProvider =
-    FutureProvider.family<RecentTracksResponse, RecentTracksParams>((
-  ref,
-  params,
-) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  final result = await repository.getRecentTracks(
-    limit: params.limit,
-    page: params.page,
-    from: params.from,
-    to: params.to,
-  );
-
-  return result.fold((failure) {
-    AppLogger.error('Failed to get recent tracks: ${failure.message}');
-    throw Exception(failure.message);
-  }, (recentTracks) => recentTracks);
-});
-
-// Simple recent tracks provider with default parameters
-final defaultRecentTracksProvider = FutureProvider<RecentTracksResponse>((
-  ref,
-) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  final result = await repository.getRecentTracks(limit: 10);
-
-  return result.fold((failure) {
-    AppLogger.error('Failed to get recent tracks: ${failure.message}');
-    throw Exception(failure.message);
-  }, (recentTracks) => recentTracks);
-});
-
 final serverStatsProvider = FutureProvider<ServerStats>((ref) async {
   final repository = ref.watch(musicRepositoryProvider);
   final result = await repository.getServerStats();
@@ -77,27 +43,6 @@ final serverStatsProvider = FutureProvider<ServerStats>((ref) async {
     AppLogger.error('Failed to get server stats: ${failure.message}');
     throw Exception(failure.message);
   }, (stats) => stats);
-});
-
-final healthCheckProvider = FutureProvider<HealthCheckResponse>((ref) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  final result = await repository.getHealthCheck();
-
-  return result.fold((failure) {
-    AppLogger.error('Failed to get health check: ${failure.message}');
-    throw Exception(failure.message);
-  }, (health) => health);
-});
-
-// User Stats Provider
-final userStatsProvider = FutureProvider<UserStats>((ref) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  final result = await repository.getUserStats();
-
-  return result.fold((failure) {
-    AppLogger.error('Failed to get user stats: ${failure.message}');
-    throw Exception(failure.message);
-  }, (userStats) => userStats);
 });
 
 // 詳細統計プロバイダー
@@ -243,31 +188,6 @@ class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
   }
 }
 
-// 統計チャート専用プロバイダー - レポートデータとは独立
-final chartStatsProvider = FutureProvider.family<dynamic, String>((
-  ref,
-  period,
-) async {
-  final selectedDate = ref.watch(reportDateProvider);
-
-  switch (period) {
-    case 'daily':
-      final stats =
-          await ref.watch(weekDailyStatsProvider(selectedDate).future);
-      return stats;
-    case 'weekly':
-      final stats =
-          await ref.watch(monthWeeklyStatsProvider(selectedDate).future);
-      return stats;
-    case 'monthly':
-      final year = selectedDate?.split('-').firstOrNull;
-      final stats = await ref.watch(yearMonthlyStatsProvider(year).future);
-      return stats;
-    default:
-      throw Exception('Unknown period: $period');
-  }
-});
-
 // 独立したチャートデータプロバイダー - レポートプロバイダーとは分離
 // 共通キャッシュとキャッシュID管理のためのプロバイダー
 final chartDataCacheProvider = StateProvider<Map<String, dynamic>>((ref) => {});
@@ -292,112 +212,6 @@ class ChartRequestTimeNotifier extends StateNotifier<DateTime> {
 final lastChartRequestTimeProvider =
     StateNotifierProvider<ChartRequestTimeNotifier, DateTime>((ref) {
   return ChartRequestTimeNotifier();
-});
-
-// 最適化されたグラフデータプロバイダー - キャッシュを利用して重複リクエストを完全に防止
-final independentChartDataProvider = FutureProvider.family<dynamic, String>((
-  ref,
-  period,
-) async {
-  final repository = ref.watch(musicRepositoryProvider);
-  // 強制的にキャッシュを使用するためにisRefreshingの監視はしない（キャッシュIDの変更で制御）
-  final cache = ref.watch(chartDataCacheProvider);
-  final cacheId = ref.watch(chartDataCacheIdProvider);
-  // lastChartRequestTimeProvider はnotifierとして直接使用するためここではwatchしない
-
-  // キャッシュキーを作成
-  final cacheKey = '$period-$cacheId';
-
-  final useCache = cache.containsKey(cacheKey);
-  final timeNotifier = ref.read(lastChartRequestTimeProvider.notifier);
-
-  // キャッシュが存在する場合は常に使用（キャッシュIDが変わったときのみ新規リクエスト）
-  if (useCache) {
-    AppLogger.debug(
-        'Using cached chart data for period: $period (cache id: $cacheId)');
-    return cache[cacheKey];
-  }
-
-  // 連続APIリクエスト防止のため、最近リクエストした場合は遅延
-  if (timeNotifier.shouldThrottle()) {
-    AppLogger.debug('Throttling chart API request');
-    await Future.delayed(const Duration(milliseconds: 200));
-  }
-
-  // 最後のリクエスト時間は後でFutureのコールバックで更新する（初期化中の状態更新を避けるため）
-
-  AppLogger.debug(
-      'Fetching independent chart data for period: $period (cache id: $cacheId)');
-
-  // 選択された日付を考慮せず、常に最新データを取得
-  dynamic result;
-  dynamic stats;
-
-  switch (period) {
-    case 'daily':
-      // 現在の日付ではなく、常に最新の週間データを取得
-      result = await repository.getWeekDailyStats(date: null);
-      stats = result.fold(
-        (failure) {
-          AppLogger.error('Failed to get week daily stats: ${failure.message}');
-          throw Exception(failure.message);
-        },
-        (data) {
-          AppLogger.debug(
-              'Successfully loaded ${data.stats.length} days of daily stats');
-          return data;
-        },
-      );
-      break;
-    case 'weekly':
-      // 現在の日付ではなく、常に最新の月間週別データを取得
-      result = await repository.getMonthWeeklyStats(date: null);
-      stats = result.fold(
-        (failure) {
-          AppLogger.error(
-              'Failed to get month weekly stats: ${failure.message}');
-          throw Exception(failure.message);
-        },
-        (data) {
-          AppLogger.debug(
-              'Successfully loaded ${data.stats.length} weeks of weekly stats');
-          return data;
-        },
-      );
-      break;
-    case 'monthly':
-      // 現在の年ではなく、常に最新の年間月別データを取得
-      result = await repository.getYearMonthlyStats(year: null);
-      stats = result.fold(
-        (failure) {
-          AppLogger.error(
-              'Failed to get year monthly stats: ${failure.message}');
-          throw Exception(failure.message);
-        },
-        (data) {
-          AppLogger.debug(
-              'Successfully loaded ${data.stats.length} months of monthly stats');
-          return data;
-        },
-      );
-      break;
-    default:
-      throw Exception('Unknown period: $period');
-  }
-
-  // 結果をキャッシュに保存
-  if (stats != null) {
-    final updatedCache = Map<String, dynamic>.from(cache);
-    updatedCache[cacheKey] = stats;
-    ref.read(chartDataCacheProvider.notifier).state = updatedCache;
-
-    // プロバイダー初期化後に最後のリクエスト時間を更新（非同期コールバック内で）
-    Future.microtask(() {
-      ref.read(lastChartRequestTimeProvider.notifier).updateLastRequestTime();
-    });
-  }
-
-  return stats;
 });
 
 // 接続状態とデータを含む統合モデル
@@ -466,9 +280,6 @@ final webSocketConnectionStateProvider = Provider<String>((ref) {
     error: (error, stack) => 'error',
   );
 });
-
-// Auto-refresh Provider
-final autoRefreshProvider = Provider<bool>((ref) => true);
 
 // Selected Period Provider
 final selectedPeriodProvider = StateProvider<String>((ref) => 'daily');
