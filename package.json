@@ -9,8 +9,8 @@
     "clean": "flutter clean",
     "deps": "flutter pub get",
     "generate": "dart run build_runner build --delete-conflicting-outputs",
-    "build:http": "./start.sh",
-    "build:https": "./start.sh https",
+    "build:http": "./scripts/start.sh",
+    "build:https": "./scripts/start.sh https",
     "env:setup": "cp .env.example .env && echo '✅ .envファイルを作成しました。必要に応じて編集してください。'"
   },
   "dependencies": {

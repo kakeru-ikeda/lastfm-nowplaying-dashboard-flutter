@@ -1,15 +1,7 @@
 #!/bin/bash
 
 # Flutter Web + Node.js Server 起動スクリプト
-#echo "🔨 Building Flutter Web application..."
-flutter build web --web-renderer html --dart-define=API_HOST=$API_HOST --dart-define=API_PORT=$API_PORT --dart-define=API_PROTOCOL=$API_PROTOCOL --no-tree-shake-icons
-
-echo "📋 Copying version info for server..."
-if [ -f "scripts/version_manager.sh" ]; then
-    ./scripts/version_manager.sh copy-for-server
-else
-    echo "⚠️  Version manager script not found, skipping server version copy"
-fi用方法: ./start.sh [https]
+# 使用方法: ./start.sh [https]
 # .envファイルから環境変数を自動読み込み
 
 set -e

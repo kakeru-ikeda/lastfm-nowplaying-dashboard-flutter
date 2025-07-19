@@ -52,7 +52,15 @@ app.use(express.static(BUILD_PATH, {
         if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
             res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年
         } else if (filePath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'no-cache');
+            // HTMLファイルは常に最新を確認
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else if (filePath.includes('version.json')) {
+            // バージョンファイルは絶対にキャッシュしない
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
         }
 
         // Flutter Web特有のMIMEタイプ設定
@@ -62,6 +70,8 @@ app.use(express.static(BUILD_PATH, {
             res.setHeader('Content-Type', 'application/wasm');
         } else if (filePath.endsWith('.html')) {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        } else if (filePath.endsWith('.json')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
         }
         
         // HTTPS用セキュリティヘッダー
@@ -79,6 +89,78 @@ app.get('/health', (req, res) => {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV || 'development'
     });
+});
+
+// バージョン情報エンドポイント
+app.get('/api/version', (req, res) => {
+    try {
+        // 強力なキャッシュ制御ヘッダー
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Last-Modified', new Date().toUTCString());
+        
+        const versionPath = path.join(__dirname, 'assets', 'version.json');
+        
+        // version.jsonファイルが存在するかチェック
+        if (!fs.existsSync(versionPath)) {
+            return res.status(404).json({
+                error: 'Version file not found',
+                message: 'バージョン情報ファイルが見つかりません'
+            });
+        }
+
+        // version.jsonを読み込み
+        const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+        
+        res.json({
+            ...versionData,
+            serverTimestamp: new Date().toISOString(),
+            cacheControl: 'no-cache'
+        });
+    } catch (error) {
+        console.error('Error reading version file:', error);
+        res.status(500).json({
+            error: 'Failed to read version information',
+            message: 'バージョン情報の読み込みに失敗しました'
+        });
+    }
+});
+
+// 現在のビルドバージョン情報エンドポイント（Webアセットから）
+app.get('/api/current-version', (req, res) => {
+    try {
+        // 強力なキャッシュ制御ヘッダー
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Last-Modified', new Date().toUTCString());
+        
+        // Webビルド内のversion.jsonを確認
+        const webVersionPath = path.join(BUILD_PATH, 'assets', 'version.json');
+        
+        if (!fs.existsSync(webVersionPath)) {
+            return res.status(404).json({
+                error: 'Web version file not found',
+                message: '現在のビルドにバージョン情報がありません'
+            });
+        }
+
+        const webVersionData = JSON.parse(fs.readFileSync(webVersionPath, 'utf8'));
+        
+        res.json({
+            ...webVersionData,
+            source: 'web-build',
+            serverTimestamp: new Date().toISOString(),
+            cacheControl: 'no-cache'
+        });
+    } catch (error) {
+        console.error('Error reading web version file:', error);
+        res.status(500).json({
+            error: 'Failed to read web version information',
+            message: 'Webビルドのバージョン情報読み込みに失敗しました'
+        });
+    }
 });
 
 // SPAのルーティング対応 - すべてのルートをindex.htmlにリダイレクト
