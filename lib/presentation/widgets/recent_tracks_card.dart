@@ -10,7 +10,7 @@ class RecentTracksCard extends ConsumerWidget {
   final VoidCallback? onRefresh;
 
   const RecentTracksCard({Key? key, required this.tracks, this.onRefresh})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +22,8 @@ class RecentTracksCard extends ConsumerWidget {
       title: 'Recent Tracks',
       trailing: onRefresh != null
           ? IconButton(
-              icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.secondary),
+              icon: Icon(Icons.refresh,
+                  color: Theme.of(context).colorScheme.secondary),
               onPressed: onRefresh,
               tooltip: 'Refresh recent tracks',
             )
@@ -41,31 +42,28 @@ class RecentTracksCard extends ConsumerWidget {
               ),
             )
           else
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 400),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: filteredTracks.length,
-                separatorBuilder:
-                    (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final track = filteredTracks[index];
-                  return ClickableTrackItem(
-                    artist: track.artist,
-                    track: track.track,
-                    album: track.album.isNotEmpty ? track.album : null,
-                    imageUrl: track.imageUrl.isNotEmpty ? track.imageUrl : null,
-                    trailing: track.playedAt != null
-                        ? Text(
-                            _formatPlayedAt(track.playedAt!),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[500],
-                            ),
-                          )
-                        : null,
-                  );
-                },
-              ),
+            ListView.separated(
+              shrinkWrap: true,
+              itemCount: filteredTracks.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final track = filteredTracks[index];
+                return ClickableTrackItem(
+                  artist: track.artist,
+                  track: track.track,
+                  album: track.album.isNotEmpty ? track.album : null,
+                  imageUrl: track.imageUrl.isNotEmpty ? track.imageUrl : null,
+                  trailing: track.playedAt != null
+                      ? Text(
+                          _formatPlayedAt(track.playedAt!),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[500],
+                                  ),
+                        )
+                      : null,
+                );
+              },
             ),
         ],
       ),
