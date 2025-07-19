@@ -164,7 +164,8 @@ final musicReportProvider = FutureProvider.family<MusicReport, String>((
 });
 
 // レポート状態管理用プロバイダー - 手動更新制御
-final reportUpdateNotifierProvider = StateNotifierProvider<ReportUpdateNotifier, ReportUpdateState>((ref) {
+final reportUpdateNotifierProvider =
+    StateNotifierProvider<ReportUpdateNotifier, ReportUpdateState>((ref) {
   return ReportUpdateNotifier(ref);
 });
 
@@ -172,13 +173,13 @@ class ReportUpdateState {
   final bool isLoading;
   final String? lastRequestedDate;
   final String? lastRequestedPeriod;
-  
+
   const ReportUpdateState({
     this.isLoading = false,
     this.lastRequestedDate,
     this.lastRequestedPeriod,
   });
-  
+
   ReportUpdateState copyWith({
     bool? isLoading,
     String? lastRequestedDate,
@@ -194,45 +195,45 @@ class ReportUpdateState {
 
 class ReportUpdateNotifier extends StateNotifier<ReportUpdateState> {
   final Ref ref;
-  
+
   ReportUpdateNotifier(this.ref) : super(const ReportUpdateState());
-  
+
   Future<void> updateReport(String period, String? date) async {
     // 重複リクエストを防ぐ
     if (state.isLoading) {
       AppLogger.debug('既にロード中のためスキップ: period=$period, date=$date');
       return;
     }
-    
-    if (state.lastRequestedDate == date && state.lastRequestedPeriod == period) {
+
+    if (state.lastRequestedDate == date &&
+        state.lastRequestedPeriod == period) {
       AppLogger.debug('同じリクエストのためスキップ: period=$period, date=$date');
       return;
     }
-    
+
     AppLogger.debug('レポート更新開始: period=$period, date=$date');
-    
+
     // ローディング状態を開始
     state = state.copyWith(
       isLoading: true,
       lastRequestedDate: date,
       lastRequestedPeriod: period,
     );
-    
+
     try {
       // 日付を更新
       ref.read(reportDateProvider.notifier).state = date;
-      
+
       // 少し待ってからプロバイダーを無効化（UIの更新を確保）
       await Future.delayed(const Duration(milliseconds: 50));
-      
+
       // レポートプロバイダーを無効化して再取得
       ref.invalidate(musicReportProvider(period));
-      
+
       // APIリクエストの完了を待つ
       await ref.read(musicReportProvider(period).future);
-      
+
       AppLogger.debug('レポート更新完了: period=$period, date=$date');
-      
     } catch (e) {
       AppLogger.error('レポート更新エラー: $e');
     } finally {

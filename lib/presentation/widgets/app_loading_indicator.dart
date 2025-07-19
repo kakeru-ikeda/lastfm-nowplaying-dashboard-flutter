@@ -120,6 +120,33 @@ class DetailedStatsLoadingIndicator extends StatelessWidget {
   }
 }
 
+/// RecentTracks用のローディング
+class RecentTracksLoadingIndicator extends StatelessWidget {
+  const RecentTracksLoadingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppLoadingIndicator(
+      size: 24.0,
+      text: 'Loading recent tracks...',
+      height: 150,
+    );
+  }
+}
+
+/// RecentTracksページネーション用の小さなローディング
+class RecentTracksPaginationLoadingIndicator extends StatelessWidget {
+  const RecentTracksPaginationLoadingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppLoadingIndicator(
+      size: 16.0,
+      height: 20,
+    );
+  }
+}
+
 /// CachedNetworkImage用の小さなローディング
 class ImageLoadingIndicator extends StatelessWidget {
   const ImageLoadingIndicator({super.key});

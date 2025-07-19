@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/recent_tracks_card.dart';
 import '../widgets/user_stats_card.dart';
-import '../widgets/simple_card.dart';
-import '../widgets/app_loading_indicator.dart';
 import '../providers/music_providers.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/responsive_helper.dart';
@@ -89,8 +87,8 @@ class DashboardPage extends ConsumerWidget {
         const UserStatsCard(),
         SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
 
-        // Recent Tracks Card
-        const RecentTracksSection(),
+        // Recent Tracks Card with Pagination
+        const RecentTracksCard(),
       ],
     );
   }
@@ -114,8 +112,8 @@ class DashboardPage extends ConsumerWidget {
         ),
         SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
 
-        // Recent Tracks Card
-        const RecentTracksSection(),
+        // Recent Tracks Card with Pagination
+        const RecentTracksCard(),
       ],
     );
   }
@@ -139,55 +137,9 @@ class DashboardPage extends ConsumerWidget {
         ),
         SizedBox(height: ResponsiveHelper.getResponsiveSpacing(context)),
 
-        // Recent Tracks Card
-        const RecentTracksSection(),
+        // Recent Tracks Card with Pagination
+        const RecentTracksCard(),
       ],
-    );
-  }
-}
-
-class RecentTracksSection extends ConsumerWidget {
-  const RecentTracksSection({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final recentTracksAsync = ref.watch(autoRefreshRecentTracksProvider);
-
-    return recentTracksAsync.when(
-      data: (recentTracks) => RecentTracksCard(
-        tracks: recentTracks.tracks,
-        onRefresh: () => ref.invalidate(autoRefreshRecentTracksProvider),
-      ),
-      loading: () => SimpleCard(
-        height: 200,
-        child: const AppLoadingIndicator(
-          height: 200,
-          text: 'Loading recent tracks...',
-        ),
-      ),
-      error: (error, stackTrace) => SimpleCard(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                '再生履歴の読み込みに失敗しました\n$error',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.invalidate(autoRefreshRecentTracksProvider),
-                child: const Text('再試行'),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
