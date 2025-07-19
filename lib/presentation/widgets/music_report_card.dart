@@ -52,7 +52,8 @@ class MusicReportCard extends ConsumerWidget {
               deleteIcon: const Icon(Icons.close, size: 18),
               onDeleted: () {
                 // ReportUpdateNotifierを使用してリセット
-                ref.read(reportUpdateNotifierProvider.notifier)
+                ref
+                    .read(reportUpdateNotifierProvider.notifier)
                     .updateReport(selectedPeriod, null);
               },
               backgroundColor:
@@ -190,6 +191,7 @@ class _TopContentSection extends StatelessWidget {
                 '#${index + 1} (${track.playcount} plays)',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              imageUrl: track.image?.first?.text,
             );
           },
         ),
@@ -221,6 +223,7 @@ class _TopContentSection extends StatelessWidget {
                 '#${index + 1} (${artist.playcount} plays)',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              imageUrl: artist.image?.first?.text,
             );
           },
         ),
