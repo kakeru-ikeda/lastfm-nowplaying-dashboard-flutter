@@ -64,8 +64,26 @@ class PeriodSelector extends ConsumerWidget {
       duration: AppConstants.defaultAnimationDuration,
       child: ElevatedButton.icon(
         onPressed: () {
-          // 期間切替時に選択日付をリセット
-          ref.read(reportDateProvider.notifier).state = null;
+          // 期間切替時に適切な初期日付を設定
+          final today = DateTime.now();
+          String? initialDate;
+          
+          switch (key) {
+            case 'daily':
+              // 日次レポート用: YYYY-MM-DD形式
+              initialDate = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+              break;
+            case 'weekly':
+              // 週次レポートの場合は今日の日付を設定しておき、チャート側で週の範囲に変換
+              initialDate = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+              break;
+            case 'monthly':
+              // 月次レポート用: YYYY-MM形式
+              initialDate = '${today.year}-${today.month.toString().padLeft(2, '0')}';
+              break;
+          }
+          
+          ref.read(reportDateProvider.notifier).state = initialDate;
           ref.read(selectedPeriodProvider.notifier).state = key;
         },
         icon: Icon(

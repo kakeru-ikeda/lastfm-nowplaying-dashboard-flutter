@@ -83,8 +83,11 @@ final yearMonthlyStatsProvider =
   }, (stats) => stats);
 });
 
-// レポート日付プロバイダー
-final reportDateProvider = StateProvider<String?>((ref) => null);
+// レポート日付プロバイダー - 初期値として今日の日付を設定
+final reportDateProvider = StateProvider<String?>((ref) {
+  final today = DateTime.now();
+  return '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+});
 
 // レポートプロバイダー - 手動制御版（自動監視しない）
 final musicReportProvider = FutureProvider.family<MusicReport, String>((

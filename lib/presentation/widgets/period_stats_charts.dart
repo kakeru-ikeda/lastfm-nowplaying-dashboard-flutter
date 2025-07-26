@@ -259,7 +259,8 @@ class _WeeklyStatsChart extends ConsumerWidget {
                             '週間チャート: タッチイベント発生 - Date: $selectedDate');
 
                         // 新しい状態管理を使用してレポートを更新
-                        ref.read(reportUpdateNotifierProvider.notifier)
+                        ref
+                            .read(reportUpdateNotifierProvider.notifier)
                             .updateReport('daily', selectedDate);
                       }
                     }
@@ -303,6 +304,30 @@ class _MonthlyStatsChart extends ConsumerWidget {
             selectedIndex = stats.stats.indexWhere((item) =>
                 '${item.startDate} - ${item.endDate}' == selectedDate);
             if (selectedIndex == -1) selectedIndex = null;
+          } else if (selectedDate != null && !selectedDate.contains(' - ')) {
+            // 日付形式（YYYY-MM-DD）の場合、その日付を含む週を検索
+            final targetDate = DateTime.tryParse(selectedDate);
+            if (targetDate != null) {
+              final currentWeekIndex = stats.stats.indexWhere((item) {
+                final startDate = DateTime.tryParse(item.startDate);
+                final endDate = DateTime.tryParse(item.endDate);
+                if (startDate != null && endDate != null) {
+                  return targetDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+                         targetDate.isBefore(endDate.add(const Duration(days: 1)));
+                }
+                return false;
+              });
+              
+              if (currentWeekIndex != -1) {
+                selectedIndex = currentWeekIndex;
+                final selectedStat = stats.stats[currentWeekIndex];
+                final weekDateRange = '${selectedStat.startDate} - ${selectedStat.endDate}';
+                // 適切な週の範囲に更新
+                Future.microtask(() {
+                  ref.read(reportDateProvider.notifier).state = weekDateRange;
+                });
+              }
+            }
           }
 
           return BarChart(
@@ -444,7 +469,8 @@ class _MonthlyStatsChart extends ConsumerWidget {
                             '月間チャート: タッチイベント発生 - Week ${selectedStat.weekNumber}, Date: $selectedDate');
 
                         // 新しい状態管理を使用してレポートを更新
-                        ref.read(reportUpdateNotifierProvider.notifier)
+                        ref
+                            .read(reportUpdateNotifierProvider.notifier)
                             .updateReport('weekly', selectedDate);
                       }
                     }
@@ -487,12 +513,28 @@ class _YearlyStatsChart extends ConsumerWidget {
           if (selectedDate != null && selectedDate.contains('-')) {
             final parts = selectedDate.split('-');
             if (parts.length == 2) {
+              // YYYY-MM形式
               final year = int.tryParse(parts[0]);
               final month = int.tryParse(parts[1]);
               if (year != null && month != null) {
                 selectedIndex = stats.stats.indexWhere(
                     (item) => item.year == year && item.month == month);
                 if (selectedIndex == -1) selectedIndex = null;
+              }
+            } else if (parts.length == 3) {
+              // YYYY-MM-DD形式の場合、その日付を含む月を検索
+              final year = int.tryParse(parts[0]);
+              final month = int.tryParse(parts[1]);
+              if (year != null && month != null) {
+                selectedIndex = stats.stats.indexWhere(
+                    (item) => item.year == year && item.month == month);
+                if (selectedIndex != -1) {
+                  // 適切な月形式に更新
+                  final monthDateString = '${year}-${month.toString().padLeft(2, '0')}';
+                  Future.microtask(() {
+                    ref.read(reportDateProvider.notifier).state = monthDateString;
+                  });
+                }
               }
             }
           }
@@ -656,7 +698,8 @@ class _YearlyStatsChart extends ConsumerWidget {
                             '年間チャート: タッチイベント発生 - ${selectedStat.year}年${selectedStat.month}月, Date: $selectedDate');
 
                         // 新しい状態管理を使用してレポートを更新
-                        ref.read(reportUpdateNotifierProvider.notifier)
+                        ref
+                            .read(reportUpdateNotifierProvider.notifier)
                             .updateReport('monthly', selectedDate);
                       }
                     }

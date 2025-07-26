@@ -49,16 +49,8 @@ class MusicReportCard extends ConsumerWidget {
           children: [
             Chip(
               label: Text(dateLabel),
-              deleteIcon: const Icon(Icons.close, size: 18),
-              onDeleted: () {
-                // ReportUpdateNotifierを使用してリセット
-                ref
-                    .read(reportUpdateNotifierProvider.notifier)
-                    .updateReport(selectedPeriod, null);
-              },
               backgroundColor:
                   Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              deleteIconColor: Theme.of(context).colorScheme.primary,
             ),
           ],
         ),
