@@ -2,7 +2,7 @@ name: lastfm_nowplaying_dashboard_flutter
 description: "Last.fm Now Playing Dashboard - Flutter Web Application with Layered Architecture"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+18
+version: 1.0.0+19
 
 environment:
   sdk: ^3.6.0
